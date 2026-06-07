@@ -32,6 +32,11 @@ import AdminSucursales from './pages/admin/AdminSucursales';
 // Owner Pages
 import OwnerDashboard from './pages/owner/OwnerDashboard';
 
+// Barber Pages
+import BarberDashboard from './pages/barber/BarberDashboard';
+import BarberCalendario from './pages/barber/BarberCalendario';
+import BarberHistorial from './pages/barber/BarberHistorial';
+
 // ============================================================
 // App — Componente raíz con todas las rutas
 // ============================================================
@@ -101,6 +106,17 @@ export default function App() {
         <Route element={<ProtectedRoute allowedRoles={['owner']} />}>
           <Route element={<AdminLayout />}>
             <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+          </Route>
+        </Route>
+
+        {/* -------------------------------------------------------
+            RUTAS EXCLUSIVAS DEL BARBERO
+            ------------------------------------------------------- */}
+        <Route element={<ProtectedRoute allowedRoles={['barber']} />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/barber" element={<BarberDashboard />} />
+            <Route path="/barber/calendario" element={<BarberCalendario />} />
+            <Route path="/barber/historial" element={<BarberHistorial />} />
           </Route>
         </Route>
 

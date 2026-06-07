@@ -10,49 +10,79 @@ import {
   FiShoppingBag,
   FiMapPin,
   FiLogOut,
+  FiHome,
+  FiClock,
 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import RoleBadge from './RoleBadge';
 
 // ============================================================
-// Sidebar — Panel de navegación administrativo
-// Se muestra en rutas /admin/* y /owner/*
+// Sidebar — Panel de navegación según rol
+// Muestra menús distintos para owner, admin y barber
 // ============================================================
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { user, logout, isOwner } = useAuth();
+  const { user, logout, isOwner, isAdmin, isBarber } = useAuth();
 
   // -----------------------------------------------------------
   // Definición de items del menú según rol
   // -----------------------------------------------------------
-  const menuItems = [
-    // Dashboard — solo el dueño
-    ...(isOwner
-      ? [
-          {
-            to: '/owner/dashboard',
-            icon: FiChevronRight,
-            label: 'Dashboard',
-            ownerOnly: true,
-          },
-        ]
-      : []),
-    { to: '/admin', icon: FiChevronRight, label: 'Resumen' },
-    { to: '/admin/citas', icon: FiCalendar, label: 'Citas' },
-    { to: '/admin/clientes', icon: FiUsers, label: 'Clientes' },
-    { to: '/admin/empleados', icon: FiUser, label: 'Empleados' },
-    { to: '/admin/servicios', icon: FiScissors, label: 'Servicios' },
-    { to: '/admin/productos', icon: FiShoppingBag, label: 'Productos' },
-    { to: '/admin/sucursales', icon: FiMapPin, label: 'Sucursales' },
-  ];
+  const getMenuItems = () => {
+    if (isOwner) {
+      return [
+        { to: '/owner/dashboard', icon: FiHome, label: 'Dashboard Global' },
+        { to: '/admin', icon: FiChevronRight, label: 'Resumen' },
+        { to: '/admin/citas', icon: FiCalendar, label: 'Citas' },
+        { to: '/admin/clientes', icon: FiUsers, label: 'Clientes' },
+        { to: '/admin/empleados', icon: FiUser, label: 'Empleados' },
+        { to: '/admin/servicios', icon: FiScissors, label: 'Servicios' },
+        { to: '/admin/productos', icon: FiShoppingBag, label: 'Productos' },
+        { to: '/admin/sucursales', icon: FiMapPin, label: 'Sucursales' },
+      ];
+    }
+
+    if (isAdmin) {
+      return [
+        { to: '/admin', icon: FiHome, label: 'Resumen' },
+        { to: '/admin/citas', icon: FiCalendar, label: 'Citas' },
+        { to: '/admin/clientes', icon: FiUsers, label: 'Clientes' },
+        { to: '/admin/empleados', icon: FiUser, label: 'Empleados' },
+        { to: '/admin/servicios', icon: FiScissors, label: 'Servicios' },
+        { to: '/admin/productos', icon: FiShoppingBag, label: 'Productos' },
+        { to: '/admin/sucursales', icon: FiMapPin, label: 'Sucursales' },
+      ];
+    }
+
+    if (isBarber) {
+      return [
+        { to: '/barber', icon: FiHome, label: 'Mi Panel' },
+        { to: '/barber/calendario', icon: FiCalendar, label: 'Calendario' },
+        { to: '/barber/historial', icon: FiClock, label: 'Historial' },
+      ];
+    }
+
+    return [];
+  };
+
+  const menuItems = getMenuItems();
 
   const isActive = (path) => {
-    if (path === '/admin' || path === '/owner/dashboard') {
+    if (path === '/admin' || path === '/owner/dashboard' || path === '/barber') {
       return location.pathname === path;
     }
     return location.pathname.startsWith(path);
   };
+
+  // Título del sidebar según rol
+  const sidebarTitle = isOwner
+    ? 'Panel Dueño'
+    : isAdmin
+    ? 'Panel Admin'
+    : isBarber
+    ? 'Panel Barbero'
+    : 'Panel';
 
   return (
     <>
@@ -89,7 +119,7 @@ export default function Sidebar() {
           {collapsed ? <FiChevronRight size={14} /> : <FiChevronLeft size={14} />}
         </button>
 
-        {/* Logo */}
+        {/* Logo y badge de rol */}
         <div className="p-4 border-b border-barber-dark">
           {!collapsed && (
             <div className="text-center">
@@ -99,7 +129,10 @@ export default function Sidebar() {
               <span className="text-barber-blue font-bold text-lg tracking-wider">
                 BARBER
               </span>
-              <p className="text-barber-gray text-xs mt-1">Panel Administrativo</p>
+              <p className="text-barber-gray text-xs mt-1">{sidebarTitle}</p>
+              <div className="mt-2">
+                <RoleBadge role={user?.role} size="sm" />
+              </div>
             </div>
           )}
         </div>
@@ -134,7 +167,7 @@ export default function Sidebar() {
               <p className="text-barber-white text-sm font-medium truncate">
                 {user?.name}
               </p>
-              <p className="text-barber-gray text-xs capitalize">{user?.role}</p>
+              <p className="text-barber-gray text-xs">{user?.email}</p>
             </div>
           )}
           <button
