@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiCalendar, FiArrowRight } from 'react-icons/fi';
+import { FiCalendar, FiArrowRight, FiMapPin, FiPhone } from 'react-icons/fi';
+import { FaWhatsapp, FaInstagram, FaTiktok } from 'react-icons/fa';
 import api from '../../services/api';
 import ServiceCard from '../../components/ServiceCard';
 import ProductCard from '../../components/ProductCard';
@@ -163,6 +164,53 @@ export default function Landing() {
             <FiCalendar size={18} />
             Agendar Mi Cita
           </Link>
+        </div>
+      </section>
+
+      {/* -------------------------------------------------------
+          CONTACTO
+          ------------------------------------------------------- */}
+      <section className="py-12 bg-barber-black border-t border-barber-dark">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            {/* Ubicación */}
+            <div className="flex items-center gap-3 text-barber-gray">
+              <FiMapPin className="text-barber-blue" size={20} />
+              <span>Culiacán, Sinaloa, México</span>
+            </div>
+
+            {/* Redes sociales y contacto */}
+            <div className="flex items-center gap-6">
+              <a
+                href="https://wa.me/526673441050"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-barber-gray hover:text-green-500 transition-colors"
+                title="WhatsApp"
+              >
+                <FaWhatsapp size={20} />
+                <span className="hidden sm:inline">667 344 1050</span>
+              </a>
+              <a
+                href="https://www.instagram.com/ligusbarber"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-barber-gray hover:text-pink-500 transition-colors"
+                title="Instagram"
+              >
+                <FaInstagram size={20} />
+              </a>
+              <a
+                href="https://www.tiktok.com/@ligusbarber"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-barber-gray hover:text-barber-white transition-colors"
+                title="TikTok"
+              >
+                <FaTiktok size={20} />
+              </a>
+            </div>
+          </div>
         </div>
       </section>
     </div>
