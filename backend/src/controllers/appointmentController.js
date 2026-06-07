@@ -135,10 +135,11 @@ exports.getAppointment = async (req, res, next) => {
 // POST /api/appointments
 // Crear una nueva cita. Verifica que no haya conflicto de horario
 // para el barbero en esa fecha y hora.
+// Soporta guest booking (sin autenticación)
 // ============================================================
 exports.createAppointment = async (req, res, next) => {
   try {
-    const { client, branch, service, barber, date, time, notes } = req.body;
+    const { client, branch, service, barber, date, time, notes, guestName, guestPhone, observations } = req.body;
 
     // Verificar que el barbero no tenga otra cita en ese horario
     const conflicting = await Appointment.findOne({
@@ -164,10 +165,12 @@ exports.createAppointment = async (req, res, next) => {
       });
     }
 
-    // Si el usuario es cliente, usar su ID como client
-    const clientId = req.user.role === 'client' ? req.user._id : client;
+    // Determinar el client ID
+    // Si hay usuario autenticado, usar su ID
+    // Si es guest, client puede ser null
+    const clientId = req.user ? req.user._id : client || null;
 
-    const appointment = await Appointment.create({
+    const appointmentData = {
       client: clientId,
       branch,
       service,
@@ -175,8 +178,18 @@ exports.createAppointment = async (req, res, next) => {
       date: new Date(date),
       time,
       price: serviceData.price,
-      notes,
-    });
+      notes: observations || notes,
+    };
+
+    // Si es guest booking, guardar datos de contacto
+    if (guestName) {
+      appointmentData.guestName = guestName;
+    }
+    if (guestPhone) {
+      appointmentData.guestPhone = guestPhone;
+    }
+
+    const appointment = await Appointment.create(appointmentData);
 
     const populated = await appointment
       .populate([

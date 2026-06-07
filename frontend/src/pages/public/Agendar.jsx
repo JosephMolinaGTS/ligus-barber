@@ -87,17 +87,18 @@ export default function Agendar() {
         time: selected.time,
       };
 
-      // Si está autenticado, usar su ID
+      // Si está autenticado, usar endpoint protegido
       if (isAuthenticated) {
         appointmentData.client = user._id;
+        await api.appointments.create(appointmentData);
       } else {
-        // Guest booking: enviar datos de contacto
+        // Guest booking: usar endpoint público
         appointmentData.guestName = `${contact.firstName} ${contact.lastName}`;
         appointmentData.guestPhone = contact.phone;
         appointmentData.observations = contact.observations;
+        await api.public.createAppointment(appointmentData);
       }
 
-      await api.appointments.create(appointmentData);
       toast.success('¡Cita agendada correctamente!');
       navigate(isAuthenticated ? '/mis-citas' : '/');
     } catch (error) {

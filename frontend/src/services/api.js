@@ -138,6 +138,7 @@ const api = {
     getServices: (params) => apiClient.get('/public/services', { params }),
     getProducts: (params) => apiClient.get('/public/products', { params }),
     getBarbersByBranch: (branchId) => apiClient.get(`/public/barbers/${branchId}`),
+    createAppointment: (data) => apiClient.post('/public/appointments', data),
   },
 };
 
