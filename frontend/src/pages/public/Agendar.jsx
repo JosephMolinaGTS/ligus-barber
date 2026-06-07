@@ -3,109 +3,112 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { FiCheck, FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import { FiCheck, FiArrowLeft } from 'react-icons/fi';
+import HorizontalCalendar from '../../components/HorizontalCalendar';
+import TimeSlotPicker from '../../components/TimeSlotPicker';
 
 // ============================================================
 // Agendar — Flujo multi-paso para reservar una cita
-// Paso 1: Sucursal → Paso 2: Servicio → Paso 3: Barbero
-// Paso 4: Fecha → Paso 5: Hora → Paso 6: Confirmación
+// Soporta booking SIN login (guest) o CON login
+// Paso 1: Servicio → Paso 2: Fecha → Paso 3: Hora
+// Paso 4: Datos contacto → Paso 5: Confirmación
 // ============================================================
 export default function Agendar() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
   // Datos del formulario
-  const [branches, setBranches] = useState([]);
   const [services, setServices] = useState([]);
-  const [barbers, setBarbers] = useState([]);
   const [availableSlots, setAvailableSlots] = useState([]);
 
   // Selección actual
   const [selected, setSelected] = useState({
-    branch: null,
     service: null,
-    barber: null,
-    date: '',
+    date: null,
     time: '',
   });
 
-  // Cargar sucursales al inicio
+  // Datos de contacto (para guest booking)
+  const [contact, setContact] = useState({
+    name: '',
+    phone: '',
+    observations: '',
+  });
+
+  // Cargar servicios al inicio
   useEffect(() => {
-    const loadBranches = async () => {
+    const loadServices = async () => {
       try {
-        const res = await api.public.getBranches();
-        setBranches(res.data.data);
+        const res = await api.services.getPublic();
+        setServices(res.data.data);
       } catch (error) {
-        toast.error('Error al cargar sucursales');
+        toast.error('Error al cargar servicios');
       }
     };
-    loadBranches();
+    loadServices();
   }, []);
 
-  // Cargar servicios cuando se selecciona sucursal
+  // Cargar horarios disponibles cuando se selecciona fecha
   useEffect(() => {
-    if (selected.branch) {
-      const loadServices = async () => {
-        try {
-          const res = await api.services.getPublic({ branch: selected.branch._id });
-          setServices(res.data.data);
-        } catch (error) {
-          console.error('Error cargando servicios:', error);
-        }
-      };
-      loadServices();
-    }
-  }, [selected.branch]);
-
-  // Cargar barberos cuando se selecciona servicio
-  useEffect(() => {
-    if (selected.service) {
-      setBarbers(selected.service.barbers || []);
-    }
-  }, [selected.service]);
-
-  // Cargar horarios disponibles cuando se selecciona fecha y barbero
-  useEffect(() => {
-    if (selected.barber && selected.service && selected.date) {
+    if (selected.date && selected.service) {
       const loadSlots = async () => {
         try {
-          const res = await api.appointments.getAvailableSlots({
-            barber: selected.barber._id,
-            service: selected.service._id,
-            date: selected.date,
-          });
-          setAvailableSlots(res.data.data);
+          // Generar todos los slots posibles
+          const allSlots = [
+            '10:00', '10:30', '11:00', '11:30',
+            '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
+            '15:00', '15:30', '16:00', '16:30', '17:00', '17:30',
+            '18:00', '18:30', '19:00', '19:30',
+          ];
+
+          // Intentar obtener slots ocupados
+          try {
+            const res = await api.appointments.getAvailableSlots({
+              service: selected.service._id,
+              date: selected.date.toISOString(),
+            });
+            const booked = res.data.data || [];
+            setAvailableSlots(allSlots.filter((slot) => !booked.includes(slot)));
+          } catch {
+            // Si la API no soporta este filtro, mostrar todos los slots
+            setAvailableSlots(allSlots);
+          }
         } catch (error) {
           console.error('Error cargando horarios:', error);
         }
       };
       loadSlots();
     }
-  }, [selected.barber, selected.service, selected.date]);
+  }, [selected.date, selected.service]);
 
   // -----------------------------------------------------------
   // Confirmar y crear la cita
   // -----------------------------------------------------------
   const handleConfirm = async () => {
-    if (!isAuthenticated) {
-      toast.error('Necesitás iniciar sesión para agendar');
-      navigate('/login');
-      return;
-    }
-
     setLoading(true);
     try {
-      await api.appointments.create({
-        branch: selected.branch._id,
+      const appointmentData = {
+        branch: selected.service.branches[0], // Usar primera sucursal del servicio
         service: selected.service._id,
-        barber: selected.barber._id,
-        date: selected.date,
+        date: selected.date.toISOString(),
         time: selected.time,
-      });
+      };
+
+      // Si está autenticado, usar su ID
+      if (isAuthenticated) {
+        appointmentData.client = user._id;
+      } else {
+        // Guest booking: enviar datos de contacto
+        appointmentData.guestName = contact.name;
+        appointmentData.guestPhone = contact.phone;
+        appointmentData.observations = contact.observations;
+      }
+
+      await api.appointments.create(appointmentData);
       toast.success('¡Cita agendada correctamente!');
-      navigate('/mis-citas');
+      navigate(isAuthenticated ? '/mis-citas' : '/');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error al agendar cita');
     } finally {
@@ -114,15 +117,21 @@ export default function Agendar() {
   };
 
   // -----------------------------------------------------------
+  // Validar formulario de contacto
+  // -----------------------------------------------------------
+  const isContactValid = () => {
+    return contact.name.trim() && contact.phone.trim();
+  };
+
+  // -----------------------------------------------------------
   // Steps del formulario
   // -----------------------------------------------------------
   const steps = [
-    { num: 1, label: 'Sucursal' },
-    { num: 2, label: 'Servicio' },
-    { num: 3, label: 'Barbero' },
-    { num: 4, label: 'Fecha' },
-    { num: 5, label: 'Hora' },
-    { num: 6, label: 'Confirmar' },
+    { num: 1, label: 'Servicio' },
+    { num: 2, label: 'Fecha' },
+    { num: 3, label: 'Hora' },
+    { num: 4, label: 'Datos' },
+    { num: 5, label: 'Confirmar' },
   ];
 
   return (
@@ -130,6 +139,11 @@ export default function Agendar() {
       <div className="text-center mb-8">
         <h1 className="text-barber-white text-4xl font-bold">Agendar Cita</h1>
         <div className="w-16 h-1 bg-barber-blue mx-auto mt-3 rounded-full" />
+        {!isAuthenticated && (
+          <p className="text-barber-gray text-sm mt-3">
+            No necesitás crear cuenta para agendar
+          </p>
+        )}
       </div>
 
       {/* Indicador de progreso */}
@@ -165,34 +179,8 @@ export default function Agendar() {
 
       {/* Contenido del paso actual */}
       <div className="bg-barber-charcoal rounded-xl border border-barber-dark p-6">
-        {/* Paso 1: Seleccionar sucursal */}
+        {/* Paso 1: Seleccionar servicio */}
         {step === 1 && (
-          <StepContent title="Elegí una sucursal">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {branches.map((branch) => (
-                <button
-                  key={branch._id}
-                  onClick={() => {
-                    setSelected({ ...selected, branch });
-                    setStep(2);
-                  }}
-                  className={`text-left p-4 rounded-lg border transition-colors ${
-                    selected.branch?._id === branch._id
-                      ? 'border-barber-blue bg-barber-blue/10'
-                      : 'border-barber-dark hover:border-barber-blue/50 bg-barber-dark/50'
-                  }`}
-                >
-                  <h3 className="text-barber-white font-semibold">{branch.name}</h3>
-                  <p className="text-barber-gray text-sm mt-1">{branch.address}</p>
-                  <p className="text-barber-gray text-xs mt-1">📞 {branch.phone}</p>
-                </button>
-              ))}
-            </div>
-          </StepContent>
-        )}
-
-        {/* Paso 2: Seleccionar servicio */}
-        {step === 2 && (
           <StepContent title="Elegí un servicio">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {services.map((service) => (
@@ -200,7 +188,7 @@ export default function Agendar() {
                   key={service._id}
                   onClick={() => {
                     setSelected({ ...selected, service });
-                    setStep(3);
+                    setStep(2);
                   }}
                   className={`text-left p-4 rounded-lg border transition-colors ${
                     selected.service?._id === service._id
@@ -209,6 +197,7 @@ export default function Agendar() {
                   }`}
                 >
                   <h3 className="text-barber-white font-semibold">{service.name}</h3>
+                  <p className="text-barber-gray text-sm mt-1 line-clamp-2">{service.description}</p>
                   <div className="flex items-center gap-3 mt-2">
                     <span className="text-barber-blue font-bold">${service.price}</span>
                     <span className="text-barber-gray text-sm">{service.duration} min</span>
@@ -219,90 +208,119 @@ export default function Agendar() {
           </StepContent>
         )}
 
-        {/* Paso 3: Seleccionar barbero */}
-        {step === 3 && (
-          <StepContent title="Elegí un barbero">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {barbers.map((barber) => (
-                <button
-                  key={barber._id}
-                  onClick={() => {
-                    setSelected({ ...selected, barber });
-                    setStep(4);
-                  }}
-                  className={`text-center p-4 rounded-lg border transition-colors ${
-                    selected.barber?._id === barber._id
-                      ? 'border-barber-blue bg-barber-blue/10'
-                      : 'border-barber-dark hover:border-barber-blue/50 bg-barber-dark/50'
-                  }`}
-                >
-                  <div className="w-16 h-16 bg-barber-dark rounded-full mx-auto mb-3 flex items-center justify-center">
-                    <span className="text-barber-white text-xl font-bold">
-                      {barber.name?.charAt(0)}
-                    </span>
-                  </div>
-                  <p className="text-barber-white font-semibold">{barber.name}</p>
-                </button>
-              ))}
-            </div>
-          </StepContent>
-        )}
-
-        {/* Paso 4: Seleccionar fecha */}
-        {step === 4 && (
+        {/* Paso 2: Seleccionar fecha */}
+        {step === 2 && (
           <StepContent title="Elegí una fecha">
-            <input
-              type="date"
-              value={selected.date}
-              min={new Date().toISOString().split('T')[0]}
-              onChange={(e) => {
-                setSelected({ ...selected, date: e.target.value, time: '' });
-                setStep(5);
+            <HorizontalCalendar
+              selectedDate={selected.date}
+              onDateSelect={(date) => {
+                setSelected({ ...selected, date, time: '' });
+                setStep(3);
               }}
-              className="w-full max-w-sm bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white focus:border-barber-blue focus:outline-none text-sm"
             />
           </StepContent>
         )}
 
-        {/* Paso 5: Seleccionar hora */}
-        {step === 5 && (
+        {/* Paso 3: Seleccionar hora */}
+        {step === 3 && (
           <StepContent title="Elegí un horario">
-            {availableSlots.length === 0 ? (
-              <p className="text-barber-gray">
-                No hay horarios disponibles para esta fecha. Elegí otra fecha.
-              </p>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                {availableSlots.map((slot) => (
-                  <button
-                    key={slot}
-                    onClick={() => {
-                      setSelected({ ...selected, time: slot });
-                      setStep(6);
-                    }}
-                    className={`p-3 rounded-lg border text-center text-sm font-medium transition-colors ${
-                      selected.time === slot
-                        ? 'border-barber-blue bg-barber-blue/10 text-barber-blue'
-                        : 'border-barber-dark hover:border-barber-blue/50 text-barber-white bg-barber-dark/50'
-                    }`}
-                  >
-                    {slot}
-                  </button>
-                ))}
-              </div>
-            )}
+            <TimeSlotPicker
+              selectedTime={selected.time}
+              onTimeSelect={(time) => {
+                setSelected({ ...selected, time });
+                setStep(4);
+              }}
+              bookedTimes={[]}
+            />
           </StepContent>
         )}
 
-        {/* Paso 6: Confirmación */}
-        {step === 6 && (
+        {/* Paso 4: Datos de contacto (solo para guest) */}
+        {step === 4 && (
+          <StepContent title="Tus datos de contacto">
+            {!isAuthenticated ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-barber-gray text-sm mb-1">
+                    Nombre completo *
+                  </label>
+                  <input
+                    type="text"
+                    value={contact.name}
+                    onChange={(e) => setContact({ ...contact, name: e.target.value })}
+                    placeholder="Juan Pérez"
+                    className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white placeholder-barber-gray focus:border-barber-blue focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-barber-gray text-sm mb-1">
+                    Teléfono *
+                  </label>
+                  <input
+                    type="tel"
+                    value={contact.phone}
+                    onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+                    placeholder="667 123 4567"
+                    className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white placeholder-barber-gray focus:border-barber-blue focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-barber-gray text-sm mb-1">
+                    Observaciones (opcional)
+                  </label>
+                  <textarea
+                    value={contact.observations}
+                    onChange={(e) => setContact({ ...contact, observations: e.target.value })}
+                    placeholder="Algún detalle adicional..."
+                    rows={3}
+                    className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white placeholder-barber-gray focus:border-barber-blue focus:outline-none resize-none"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-barber-white mb-2">
+                  <span className="text-barber-gray">Nombre:</span> {user?.name}
+                </p>
+                <p className="text-barber-white">
+                  <span className="text-barber-gray">Teléfono:</span> {user?.phone}
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                if (!isAuthenticated && !isContactValid()) {
+                  toast.error('Completá nombre y teléfono');
+                  return;
+                }
+                setStep(5);
+              }}
+              className="w-full mt-6 bg-barber-blue hover:bg-barber-blue-light text-white py-3 rounded-lg font-medium transition-colors"
+            >
+              Continuar
+            </button>
+          </StepContent>
+        )}
+
+        {/* Paso 5: Confirmación */}
+        {step === 5 && (
           <StepContent title="Resumen de tu cita">
             <div className="space-y-3 mb-6">
-              <SummaryRow label="Sucursal" value={selected.branch?.name} />
               <SummaryRow label="Servicio" value={selected.service?.name} />
-              <SummaryRow label="Barbero" value={selected.barber?.name} />
-              <SummaryRow label="Fecha" value={selected.date} />
+              <SummaryRow label="Fecha" value={
+                selected.date?.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+              } />
               <SummaryRow label="Hora" value={selected.time} />
+              {!isAuthenticated && (
+                <>
+                  <SummaryRow label="Nombre" value={contact.name} />
+                  <SummaryRow label="Teléfono" value={contact.phone} />
+                  {contact.observations && (
+                    <SummaryRow label="Observaciones" value={contact.observations} />
+                  )}
+                </>
+              )}
               <div className="h-[1px] bg-barber-dark" />
               <SummaryRow
                 label="Precio"
@@ -353,7 +371,7 @@ function SummaryRow({ label, value, highlight }) {
     <div className="flex justify-between items-center">
       <span className="text-barber-gray text-sm">{label}</span>
       <span
-        className={`text-sm font-medium ${
+        className={`text-sm font-medium text-right ${
           highlight ? 'text-barber-blue text-lg' : 'text-barber-white'
         }`}
       >
