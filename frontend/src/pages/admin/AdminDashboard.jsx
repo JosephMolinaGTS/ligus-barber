@@ -6,7 +6,7 @@ import { FiCalendar, FiCheck, FiClock, FiX, FiUsers } from 'react-icons/fi';
 
 // ============================================================
 // AdminDashboard — Panel de resumen para administradores de sucursal
-// Muestra métricas básicas y acciones rápidas
+// Muestra métricas básicas con selector de fecha
 // ============================================================
 export default function AdminDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -18,20 +18,29 @@ export default function AdminDashboard() {
     cancelled: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true);
       try {
         const res = await api.appointments.getAll({ limit: 50 });
         const apts = res.data.data;
-        setAppointments(apts.slice(0, 10));
+
+        // Filtrar por fecha seleccionada
+        const filtered = apts.filter((apt) => {
+          const aptDate = new Date(apt.date).toISOString().split('T')[0];
+          return aptDate === selectedDate;
+        });
+
+        setAppointments(filtered.slice(0, 10));
 
         setStats({
-          total: res.data.pagination.total,
-          pending: apts.filter((a) => a.status === 'pending').length,
-          confirmed: apts.filter((a) => a.status === 'confirmed').length,
-          completed: apts.filter((a) => a.status === 'completed').length,
-          cancelled: apts.filter((a) => a.status === 'cancelled').length,
+          total: filtered.length,
+          pending: filtered.filter((a) => a.status === 'pending').length,
+          confirmed: filtered.filter((a) => a.status === 'confirmed').length,
+          completed: filtered.filter((a) => a.status === 'completed').length,
+          cancelled: filtered.filter((a) => a.status === 'cancelled').length,
         });
       } catch (error) {
         console.error('Error cargando dashboard:', error);
@@ -41,59 +50,59 @@ export default function AdminDashboard() {
     };
 
     loadData();
-  }, []);
+  }, [selectedDate]);
 
   if (loading) {
-    return <p className="text-barber-gray">Cargando panel...</p>;
+    return (
+      <div className="text-center py-12">
+        <div className="w-12 h-12 border-4 border-barber-dark border-t-barber-blue rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-barber-gray">Cargando panel...</p>
+      </div>
+    );
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <h1 className="text-barber-white text-3xl font-bold">Panel Admin</h1>
-        <Link
-          to="/admin/citas"
-          className="bg-barber-blue hover:bg-barber-blue-light text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          Ver Citas
-        </Link>
+        <div className="flex items-center gap-4">
+          {/* Selector de fecha */}
+          <div className="flex items-center gap-2 bg-barber-dark rounded-lg px-4 py-2">
+            <FiCalendar className="text-barber-blue" size={16} />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-transparent text-barber-white text-sm focus:outline-none"
+            />
+          </div>
+          <Link
+            to="/admin/citas"
+            className="bg-barber-blue hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            Ver Citas
+          </Link>
+        </div>
       </div>
 
       {/* Tarjetas de estadísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatsCard
-          title="Total Citas"
-          value={stats.total}
-          icon={FiCalendar}
-          color="blue"
-        />
-        <StatsCard
-          title="Pendientes"
-          value={stats.pending}
-          icon={FiClock}
-          color="yellow"
-        />
-        <StatsCard
-          title="Confirmadas"
-          value={stats.confirmed}
-          icon={FiCheck}
-          color="green"
-        />
-        <StatsCard
-          title="Canceladas"
-          value={stats.cancelled}
-          icon={FiX}
-          color="red"
-        />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatsCard title="Total Citas" value={stats.total} icon={FiCalendar} color="blue" />
+        <StatsCard title="Pendientes" value={stats.pending} icon={FiClock} color="yellow" />
+        <StatsCard title="Confirmadas" value={stats.confirmed} icon={FiCheck} color="green" />
+        <StatsCard title="Canceladas" value={stats.cancelled} icon={FiX} color="red" />
       </div>
 
       {/* Últimas citas */}
       <div className="bg-barber-charcoal rounded-xl border border-barber-dark p-6">
         <h2 className="text-barber-white text-xl font-semibold mb-4">
-          Últimas Citas
+          Citas del día
         </h2>
         {appointments.length === 0 ? (
-          <p className="text-barber-gray text-sm">No hay citas recientes</p>
+          <div className="text-center py-8">
+            <FiCalendar className="mx-auto text-gray-600 mb-3" size={48} />
+            <p className="text-barber-gray text-sm">No hay citas para esta fecha</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {appointments.map((apt) => (
@@ -102,11 +111,11 @@ export default function AdminDashboard() {
                 className="flex items-center justify-between p-3 bg-barber-dark rounded-lg"
               >
                 <div>
-                  <p className="text-barber-white text-sm font-medium">
-                    {apt.client?.name} — {apt.service?.name}
+                  <p className="text-white text-sm font-medium">
+                    {apt.client?.name || 'Cliente general'} — {apt.service?.name}
                   </p>
-                  <p className="text-barber-gray text-xs">
-                    {new Date(apt.date).toLocaleDateString('es-AR')} a las {apt.time}
+                  <p className="text-gray-400 text-xs">
+                    {new Date(apt.date).toLocaleDateString('es-MX')} a las {apt.time}
                     {' · '} {apt.barber?.name}
                   </p>
                 </div>
@@ -122,13 +131,13 @@ export default function AdminDashboard() {
 
 function StatusBadge({ status }) {
   const config = {
-    pending: { label: 'Pendiente', color: 'text-yellow-500 bg-yellow-500/10' },
-    confirmed: { label: 'Confirmada', color: 'text-barber-blue bg-barber-blue/10' },
-    completed: { label: 'Completada', color: 'text-green-500 bg-green-500/10' },
-    cancelled: { label: 'Cancelada', color: 'text-barber-red bg-barber-red/10' },
+    pending: { label: 'Pendiente', color: 'text-yellow-400 bg-yellow-400/10' },
+    confirmed: { label: 'Confirmada', color: 'text-blue-400 bg-blue-400/10' },
+    completed: { label: 'Completada', color: 'text-green-400 bg-green-400/10' },
+    cancelled: { label: 'Cancelada', color: 'text-red-400 bg-red-400/10' },
   };
   const s = config[status] || config.pending;
   return (
-    <span className={`text-xs px-2 py-1 rounded-full ${s.color}`}>{s.label}</span>
+    <span className={`text-xs px-3 py-1 rounded-full font-medium ${s.color}`}>{s.label}</span>
   );
 }

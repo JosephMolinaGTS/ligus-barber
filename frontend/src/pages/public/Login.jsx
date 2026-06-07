@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { FiArrowLeft } from 'react-icons/fi';
 
 // ============================================================
 // Login — Página de inicio de sesión
@@ -24,8 +25,10 @@ export default function Login() {
       // Redirigir según rol
       if (user.role === 'owner') {
         navigate('/owner/dashboard');
-      } else if (user.role === 'admin' || user.role === 'barber') {
+      } else if (user.role === 'admin') {
         navigate('/admin');
+      } else if (user.role === 'barber') {
+        navigate('/barber');
       } else {
         navigate('/');
       }
@@ -39,6 +42,15 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-barber-black flex items-center justify-center px-4">
       <div className="w-full max-w-md">
+        {/* Botón volver */}
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-6 transition-colors"
+        >
+          <FiArrowLeft size={16} />
+          Volver al inicio
+        </Link>
+
         {/* Logo */}
         <div className="text-center mb-8">
           <span className="text-barber-white text-3xl font-bold tracking-wider">
@@ -47,7 +59,7 @@ export default function Login() {
           <span className="text-barber-blue text-3xl font-bold tracking-wider">
             {' '}BARBER
           </span>
-          <p className="text-barber-gray text-sm mt-2">Iniciá sesión en tu cuenta</p>
+          <p className="text-barber-gray text-sm mt-2">Inicia sesión en tu cuenta</p>
         </div>
 
         {/* Formulario */}
@@ -97,7 +109,7 @@ export default function Login() {
 
         {/* Link a registro */}
         <p className="text-center text-barber-gray text-sm mt-6">
-          ¿No tenés cuenta?{' '}
+          ¿No tienes cuenta?{' '}
           <Link to="/register" className="text-barber-blue hover:text-barber-blue-light">
             Registrate
           </Link>

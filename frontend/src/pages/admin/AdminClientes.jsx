@@ -88,7 +88,7 @@ export default function AdminClientes() {
     {
       key: 'createdAt',
       label: 'Registro',
-      render: (val) => new Date(val).toLocaleDateString('es-AR'),
+      render: (val) => new Date(val).toLocaleDateString('es-MX'),
     },
     {
       key: 'actions',

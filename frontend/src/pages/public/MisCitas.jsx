@@ -77,7 +77,7 @@ export default function MisCitas() {
         <p className="text-barber-gray text-center">Cargando citas...</p>
       ) : appointments.length === 0 ? (
         <div className="bg-barber-charcoal rounded-xl border border-barber-dark p-8 text-center">
-          <p className="text-barber-gray">No tenés citas{filter ? ' con ese estado' : ''}</p>
+          <p className="text-barber-gray">No tienes citas{filter ? ' con ese estado' : ''}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -100,7 +100,7 @@ export default function MisCitas() {
                     </span>
                   </div>
                   <div className="text-barber-gray text-sm space-y-1">
-                    <p>📅 {new Date(apt.date).toLocaleDateString('es-AR')}</p>
+                    <p>📅 {new Date(apt.date).toLocaleDateString('es-MX')}</p>
                     <p>🕐 {apt.time}</p>
                     <p>✂️ {apt.barber?.name}</p>
                     <p>📍 {apt.branch?.name}</p>
