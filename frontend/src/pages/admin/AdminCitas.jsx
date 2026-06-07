@@ -55,7 +55,7 @@ export default function AdminCitas() {
     {
       key: 'client',
       label: 'Cliente',
-      render: (_, row) => row.client?.name || '-',
+      render: (_, row) => row.client?.name || row.guestName || '-',
     },
     {
       key: 'service',
@@ -162,7 +162,7 @@ export default function AdminCitas() {
         {selected && (
           <div className="space-y-4">
             <p className="text-barber-gray text-sm">
-              {selected.client?.name} — {selected.service?.name}
+              {selected.client?.name || selected.guestName || 'Cliente'} — {selected.service?.name}
             </p>
             <div className="space-y-2">
               {['pending', 'confirmed', 'completed', 'cancelled'].map((status) => (
