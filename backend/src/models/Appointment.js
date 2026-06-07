@@ -3,13 +3,24 @@ const mongoose = require('mongoose');
 // ============================================================
 // Schema de Cita (Appointment)
 // Representa una reserva de servicio con barbero en una sucursal.
+// Soporta guest booking (sin cuenta de usuario)
 // ============================================================
 const AppointmentSchema = new mongoose.Schema(
   {
     client: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: [true, 'El cliente es obligatorio'],
+      // No es requerido para permitir guest booking
+    },
+    guestName: {
+      type: String,
+      trim: true,
+      // Nombre del cliente invitado (sin cuenta)
+    },
+    guestPhone: {
+      type: String,
+      trim: true,
+      // Teléfono del cliente invitado (sin cuenta)
     },
     branch: {
       type: mongoose.Schema.Types.ObjectId,

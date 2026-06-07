@@ -3,6 +3,7 @@ const router = express.Router();
 const { getPublicBranches } = require('../controllers/branchController');
 const { getPublicServices } = require('../controllers/serviceController');
 const { getPublicProducts } = require('../controllers/productController');
+const { createAppointment } = require('../controllers/appointmentController');
 const User = require('../models/User');
 
 // -----------------------------------------------------------
@@ -35,5 +36,10 @@ router.get('/barbers/:branchId', async (req, res) => {
     });
   }
 });
+
+// -----------------------------------------------------------
+// Crear cita sin autenticación (guest booking)
+// -----------------------------------------------------------
+router.post('/appointments', createAppointment);
 
 module.exports = router;
