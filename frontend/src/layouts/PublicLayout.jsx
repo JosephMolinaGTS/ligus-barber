@@ -1,5 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { FaWhatsapp, FaInstagram, FaTiktok } from 'react-icons/fa';
+import { FiMapPin } from 'react-icons/fi';
 
 // ============================================================
 // PublicLayout — Layout para páginas públicas
@@ -45,10 +47,42 @@ export default function PublicLayout() {
             {/* Contacto */}
             <div>
               <h4 className="text-barber-white font-semibold mb-3">Contacto</h4>
-              <ul className="space-y-2 text-barber-gray text-sm">
-                <li>📞 11-1234-5678</li>
-                <li>📧 info@ligusbarber.com</li>
-                <li>📍 Buenos Aires, Argentina</li>
+              <ul className="space-y-3 text-barber-gray text-sm">
+                <li className="flex items-center gap-2">
+                  <FiMapPin className="text-barber-blue" size={16} />
+                  Culiacán, Sinaloa, México
+                </li>
+                <li>
+                  <a
+                    href="https://wa.me/526673441050"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 hover:text-green-500 transition-colors"
+                  >
+                    <FaWhatsapp className="text-green-500" size={16} />
+                    667 344 1050
+                  </a>
+                </li>
+                <li className="flex items-center gap-4">
+                  <a
+                    href="https://www.instagram.com/ligusbarber"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-pink-500 transition-colors"
+                    title="Instagram"
+                  >
+                    <FaInstagram size={18} />
+                  </a>
+                  <a
+                    href="https://www.tiktok.com/@ligusbarber"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-barber-white transition-colors"
+                    title="TikTok"
+                  >
+                    <FaTiktok size={18} />
+                  </a>
+                </li>
               </ul>
             </div>
           </div>

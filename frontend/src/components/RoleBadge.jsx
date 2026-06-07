@@ -1,4 +1,4 @@
-import { FiCrown, FiShield, FiScissors } from 'react-icons/fi';
+import { FiStar, FiShield, FiScissors } from 'react-icons/fi';
 
 // ============================================================
 // RoleBadge — Badge visual del rol del usuario
@@ -8,7 +8,7 @@ import { FiCrown, FiShield, FiScissors } from 'react-icons/fi';
 const ROLE_CONFIG = {
   owner: {
     label: 'DUEÑO',
-    icon: FiCrown,
+    icon: FiStar,
     color: 'bg-barber-blue text-white',
   },
   admin: {

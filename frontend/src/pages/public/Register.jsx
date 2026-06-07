@@ -52,7 +52,7 @@ export default function Register() {
           <span className="text-barber-blue text-3xl font-bold tracking-wider">
             {' '}BARBER
           </span>
-          <p className="text-barber-gray text-sm mt-2">Creá tu cuenta</p>
+          <p className="text-barber-gray text-sm mt-2">Crea tu cuenta</p>
         </div>
 
         {/* Formulario */}
@@ -97,7 +97,7 @@ export default function Register() {
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white focus:border-barber-blue focus:outline-none text-sm"
-                placeholder="11-1234-5678"
+                placeholder="667 xxx xxxx"
               />
             </div>
 
@@ -129,7 +129,7 @@ export default function Register() {
                   setForm({ ...form, confirmPassword: e.target.value })
                 }
                 className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white focus:border-barber-blue focus:outline-none text-sm"
-                placeholder="Repetí tu contraseña"
+                placeholder="Repite tu contraseña"
                 required
                 minLength={6}
               />
@@ -148,9 +148,9 @@ export default function Register() {
 
         {/* Link a login */}
         <p className="text-center text-barber-gray text-sm mt-6">
-          ¿Ya tenés cuenta?{' '}
+          ¿Ya tienes cuenta?{' '}
           <Link to="/login" className="text-barber-blue hover:text-barber-blue-light">
-            Iniciá sesión
+            Inicia sesión
           </Link>
         </p>
       </div>

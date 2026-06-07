@@ -14,22 +14,51 @@ exports.getDashboard = async (req, res, next) => {
 
     // Calcular rango de fechas según el período
     let startDate, endDate;
-    const now = date ? new Date(date) : new Date();
+    let chartStartDate, chartEndDate;
 
-    switch (period) {
-      case 'day':
+    if (date) {
+      // Parsear la fecha según el período
+      if (period === 'day') {
+        // date formato: YYYY-MM-DD
+        const [year, month, day] = date.split('-').map(Number);
+        startDate = new Date(year, month - 1, day);
+        endDate = new Date(year, month - 1, day + 1);
+        // Para gráfica: mostrar este día específico
+        chartStartDate = startDate;
+        chartEndDate = endDate;
+      } else if (period === 'month') {
+        // date formato: YYYY-MM
+        const [year, month] = date.split('-').map(Number);
+        startDate = new Date(year, month - 1, 1);
+        endDate = new Date(year, month, 1);
+        // Para gráfica: mostrar este mes específico
+        chartStartDate = startDate;
+        chartEndDate = endDate;
+      } else if (period === 'year') {
+        // date formato: YYYY
+        const year = parseInt(date);
+        startDate = new Date(year, 0, 1);
+        endDate = new Date(year + 1, 0, 1);
+        // Para gráfica: mostrar todos los meses del año
+        chartStartDate = startDate;
+        chartEndDate = endDate;
+      }
+    } else {
+      // Sin fecha: usar fecha actual
+      const now = new Date();
+      if (period === 'day') {
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-        break;
-      case 'year':
+      } else if (period === 'year') {
         startDate = new Date(now.getFullYear(), 0, 1);
         endDate = new Date(now.getFullYear() + 1, 0, 1);
-        break;
-      case 'month':
-      default:
+      } else {
+        // month
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        break;
+      }
+      chartStartDate = startDate;
+      chartEndDate = endDate;
     }
 
     // -----------------------------------------------------------
@@ -167,55 +196,112 @@ exports.getDashboard = async (req, res, next) => {
     });
 
     // -----------------------------------------------------------
-    // Citas por mes (últimos 6 meses) para gráfica de barras
+    // Citas por período para gráfica
     // -----------------------------------------------------------
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    let chartData = [];
 
-    const appointmentsByMonth = await Appointment.aggregate([
-      {
-        $match: {
-          date: { $gte: sixMonthsAgo },
-          status: { $ne: 'cancelled' },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$date' },
-            month: { $month: '$date' },
+    if (period === 'year') {
+      // Para año: mostrar citas por mes
+      const appointmentsByMonth = await Appointment.aggregate([
+        {
+          $match: {
+            date: { $gte: chartStartDate, $lt: chartEndDate },
+            status: { $ne: 'cancelled' },
           },
-          count: { $sum: 1 },
-          revenue: {
-            $sum: {
-              $cond: [{ $eq: ['$status', 'completed'] }, '$price', 0],
+        },
+        {
+          $group: {
+            _id: { month: { $month: '$date' } },
+            count: { $sum: 1 },
+            revenue: {
+              $sum: {
+                $cond: [{ $eq: ['$status', 'completed'] }, '$price', 0],
+              },
             },
           },
         },
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } },
-    ]);
+        { $sort: { '_id.month': 1 } },
+      ]);
 
-    // Formatear datos para gráfica
-    const monthNames = [
-      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
-    ];
-    const chartData = appointmentsByMonth.map((item) => ({
-      name: `${monthNames[item._id.month - 1]} ${item._id.year}`,
-      citas: item.count,
-      ingresos: item.revenue,
-    }));
+      const monthNames = [
+        'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+      ];
+
+      chartData = appointmentsByMonth.map((item) => ({
+        name: monthNames[item._id.month - 1],
+        citas: item.count,
+        ingresos: item.revenue,
+      }));
+    } else if (period === 'month') {
+      // Para mes: mostrar citas por día
+      const appointmentsByDay = await Appointment.aggregate([
+        {
+          $match: {
+            date: { $gte: chartStartDate, $lt: chartEndDate },
+            status: { $ne: 'cancelled' },
+          },
+        },
+        {
+          $group: {
+            _id: { day: { $dayOfMonth: '$date' } },
+            count: { $sum: 1 },
+            revenue: {
+              $sum: {
+                $cond: [{ $eq: ['$status', 'completed'] }, '$price', 0],
+              },
+            },
+          },
+        },
+        { $sort: { '_id.day': 1 } },
+      ]);
+
+      chartData = appointmentsByDay.map((item) => ({
+        name: `Día ${item._id.day}`,
+        citas: item.count,
+        ingresos: item.revenue,
+      }));
+    } else {
+      // Para día: mostrar citas por hora
+      const appointmentsByHour = await Appointment.aggregate([
+        {
+          $match: {
+            date: { $gte: chartStartDate, $lt: chartEndDate },
+            status: { $ne: 'cancelled' },
+          },
+        },
+        {
+          $group: {
+            _id: { hour: { $hour: '$date' } },
+            count: { $sum: 1 },
+            revenue: {
+              $sum: {
+                $cond: [{ $eq: ['$status', 'completed'] }, '$price', 0],
+              },
+            },
+          },
+        },
+        { $sort: { '_id.hour': 1 } },
+      ]);
+
+      chartData = appointmentsByHour.map((item) => ({
+        name: `${item._id.hour}:00`,
+        citas: item.count,
+        ingresos: item.revenue,
+      }));
+    }
 
     // -----------------------------------------------------------
     // Últimas 10 citas (para tabla de movimientos)
     // -----------------------------------------------------------
-    const recentAppointments = await Appointment.find()
+    const recentAppointments = await Appointment.find({
+      date: { $gte: startDate, $lt: endDate },
+    })
       .populate('client', 'name email')
       .populate('service', 'name')
       .populate('barber', 'name')
       .populate('branch', 'name')
-      .sort({ createdAt: -1 })
+      .sort({ date: -1 })
       .limit(10);
 
     // -----------------------------------------------------------

@@ -137,6 +137,7 @@ const api = {
     getBranches: () => apiClient.get('/public/branches'),
     getServices: (params) => apiClient.get('/public/services', { params }),
     getProducts: (params) => apiClient.get('/public/products', { params }),
+    getBarbersByBranch: (branchId) => apiClient.get(`/public/barbers/${branchId}`),
   },
 };
 

@@ -70,7 +70,7 @@ export default function AdminCitas() {
     {
       key: 'date',
       label: 'Fecha',
-      render: (val) => new Date(val).toLocaleDateString('es-AR'),
+      render: (val) => new Date(val).toLocaleDateString('es-MX'),
     },
     { key: 'time', label: 'Hora' },
     {
