@@ -1,240 +1,168 @@
 # LIGUS BARBER — Sistema de Gestión de Barbería
 
-Plataforma web completa para administrar una barbería con múltiples sucursales, inspirada en la estructura funcional de AgendaPro.
+## Descripción
+Plataforma web completa para administrar una barbería con múltiples sucursales, inspirada en la estructura funcional de AgendaPro. Permite gestionar citas, servicios, productos, sucursales y empleados con roles diferenciados (propietario, administrador, barbero y cliente).
 
-## Stack Tecnológico
+## Entidades principales
 
-| Capa | Tecnología |
-|------|-----------|
-| Frontend | React 18 + Vite |
-| Navegación | React Router DOM v6 |
-| HTTP | Axios |
-| Estilos | Tailwind CSS |
-| Backend | Express.js (Node.js) |
-| Base de datos | MongoDB + Mongoose |
-| Autenticación | JWT + bcrypt |
-| Gráficas | Recharts |
+Las dos entidades principales del sistema son **Servicios** y **Sucursales**.
 
-## Estructura del Proyecto
+### Servicios (Service)
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| name | String (required) | Nombre del servicio |
+| description | String | Descripción del servicio |
+| price | Number (required) | Precio en MXN |
+| duration | Number (required) | Duración en minutos |
+| branches | [ObjectId → Branch] | Sucursales donde está disponible |
+| barbers | [ObjectId → User] | Barberos que pueden realizarlo |
+| isActive | Boolean | Soft delete (default: true) |
 
-```
-ligus-barber/
-├── backend/
-│   ├── src/
-│   │   ├── config/         # Conexión DB, JWT config
-│   │   ├── controllers/    # Lógica de cada endpoint
-│   │   ├── middleware/      # Auth, roles, errores, validación
-│   │   ├── models/         # Schemas de Mongoose
-│   │   ├── routes/         # Definición de rutas API
-│   │   ├── utils/          # Helpers, seed script
-│   │   └── server.js       # Entry point
-│   ├── .env
-│   └── package.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/     # Componentes reutilizables
-│   │   ├── layouts/        # Layouts (público, admin)
-│   │   ├── pages/          # Páginas por módulo
-│   │   ├── routes/         # Rutas React
-│   │   ├── services/       # Capa API (axios)
-│   │   ├── context/        # AuthContext
-│   │   ├── hooks/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── tailwind.config.js
-│   └── package.json
+### Sucursales (Branch)
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| name | String (required) | Nombre de la sucursal |
+| address | String (required) | Dirección completa |
+| phone | String (required) | Teléfono de contacto |
+| schedule.open | String | Hora de apertura (default: 09:00) |
+| schedule.close | String | Hora de cierre (default: 20:00) |
+| schedule.days | [Number] | Días activos (0=Dom, 6=Sáb) |
+| isActive | Boolean | Soft delete (default: true) |
+
+## Relación entre entidades
+
+**Tipo de relación: Referencia ObjectId (Foreign Key)**
+
+La relación entre Servicios y Sucursales es **muchos a muchos**: un servicio puede estar disponible en múltiples sucursales, y una sucursal puede ofrecer múltiples servicios. En Mongoose esto se implementa como un array de referencias ObjectId en el campo `branches` del modelo Service:
+
+```javascript
+branches: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Branch' }]
 ```
 
-## Requisitos Previos
+**Justificación de por qué se eligió referencia ObjectId:**
+Se eligió referencia ObjectId en lugar de documento embebido porque:
+1. Los datos de las sucursales cambian independientemente de los servicios (actualización de horarios, dirección, etc.)
+2. Se necesitan consultas cruzadas (buscar todos los servicios de una sucursal, y todas las sucursales de un servicio)
+3. Evita duplicación de datos: si un servicio está en 3 sucursales, no se duplica la información de cada sucursal
+4. Permite mantener integridad referencial con validaciones de Mongoose
 
-- [Node.js](https://nodejs.org/) v18 o superior
-- [MongoDB](https://www.mongodb.com/) (local o Atlas)
-- npm o yarn
+Otras relaciones en el sistema:
+- **Appointment → User (client)**: Referencia ObjectId (muchos a uno)
+- **Appointment → User (barber)**: Referencia ObjectId (muchos a uno)
+- **Appointment → Branch**: Referencia ObjectId (muchos a uno)
+- **Appointment → Service**: Referencia ObjectId (muchos a uno)
+- **Product → Branch**: Referencia ObjectId (muchos a uno)
+- **User (admin/barber) → Branch**: Referencia ObjectId (muchos a uno)
 
-## Instalación y Ejecución
+## Versión de MongoDB
+**MongoDB 7.0.x** — Utilizando Mongoose 8.7.0 como ODM (Object Document Mapper).
 
-### 1. Clonar o ubicar el proyecto
+## Stack tecnológico
+- **Frontend**: React 18 + Vite 5 + Tailwind CSS 3 + Axios + React Router DOM 6 + Recharts
+- **Backend**: Express.js 4 + Mongoose 8 + JWT + bcryptjs
+- **Base de datos**: MongoDB 7.0.x (local o Atlas)
+- **Autenticación**: JWT (JSON Web Tokens) con bcrypt para hash de contraseñas
 
+## Instalación y ejecución
+
+### Prerrequisitos
+- Node.js v18 o superior
+- MongoDB 7.0.x (local o Atlas)
+- npm
+
+### Pasos
 ```bash
+# Clonar el repositorio
+git clone <url-del-repositorio>
 cd ligus-barber
-```
 
-### 2. Configurar Backend
-
-```bash
+# Backend
 cd backend
 npm install
+# Configurar archivo .env con las variables de entorno
+npm run seed    # Cargar datos de ejemplo
+npm run dev     # Iniciar servidor en http://localhost:5000
+
+# Frontend (otra terminal)
+cd frontend
+npm install
+npm run dev     # Iniciar en http://localhost:3000
 ```
 
-Editar el archivo `.env` con tu conexión a MongoDB:
-
+### Variables de entorno (backend/.env)
 ```
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/ligus-barber
-JWT_SECRET=tu-secreto-super-seguro-aqui
+JWT_SECRET=tu-secreto-seguro-aqui
 JWT_EXPIRE=7d
 ```
 
-### 3. Sembrar datos de prueba (opcional)
-
+## Seed de datos
 ```bash
+cd backend
 npm run seed
 ```
+El seed crea automáticamente:
+- 2 sucursales (LIGUS Centro, LIGUS Norte)
+- 1 propietario, 2 administradores, 6 barberos, 5 clientes
+- 6 servicios con precios y duraciones
+- 8 productos distribuidos en ambas sucursales
+- 10 citas de ejemplo
 
-Esto crea usuarios, sucursales, servicios, productos y citas de prueba.
-
-### 4. Iniciar Backend
-
-```bash
-npm run dev
-```
-
-El servidor corre en `http://localhost:5000`
-
-### 5. Configurar Frontend (otra terminal)
-
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
-
-El frontend corre en `http://localhost:3000`
-
-## Credenciales de Prueba
-
+## Usuario de prueba
 | Rol | Email | Contraseña |
-|-----|-------|-----------|
-| Dueño | owner@ligus.com | 123456 |
-| Administrador | admin@ligus.com | 123456 |
-| Barbero | carlos@ligus.com | 123456 |
-| Cliente | juan@email.com | 123456 |
+|-----|-------|------------|
+| **Demo (Cliente)** | **demo@demo.com** | **Demo1234** |
+| Propietario | duenoligus@gmail.com | Ligus2024! |
+| Admin Centro | admincentro@gmail.com | Admin2024! |
+| Admin Norte | adminnorte@gmail.com | AdminNorte2024! |
+| Barbero | rodcarlos@gmail.com | Barber2024a! |
+| Cliente | perjuan@gmail.com | Client2024! |
 
-## Módulos del Sistema
-
-### 1. Página Pública
-- Landing page con hero, servicios, productos y sucursales
-- Catálogo de servicios con filtros
-- Catálogo de productos con filtros por categoría y sucursal
-- Lista de sucursales
-
-### 2. Autenticación
-- Login con JWT
-- Registro de usuarios
-- Protección de rutas por rol
-- Roles: dueño, administrador, barbero, cliente
-
-### 3. Agenda de Citas
-- Flujo multi-paso: sucursal → servicio → barbero → fecha → hora → confirmar
-- Verificación de disponibilidad horaria
-- Estados: pendiente, confirmada, completada, cancelada
-
-### 4. Gestión de Sucursales
-- CRUD completo
-- Horarios de atención por día
-- Activo/inactivo
-
-### 5. Gestión de Servicios
-- CRUD completo
-- Precio, duración, sucursales disponibles
-- Barberos que pueden realizarlo
-
-### 6. Gestión de Empleados
-- CRUD completo
-- Asignación a sucursal
-- Roles: barbero o administrador
-
-### 7. Gestión de Clientes
-- CRUD completo
-- Historial de citas
-- Búsqueda por nombre, email o teléfono
-
-### 8. Catálogo de Productos
-- CRUD completo
-- Categorías: pomadas, ceras, shampoo, aceites, after-shave, peines, kits
-- Indicador de producto promocionado
-- Stock por sucursal
-
-### 9. Dashboard del Dueño
-- Métricas: total citas, completadas, canceladas, ingresos, clientes
-- Gráfica de barras: citas por mes
-- Gráfica circular: distribución de servicios
-- Gráfica de línea: ingresos por mes
-- Ranking de barberos y sucursales
-- Tabla de últimos movimientos
-- Filtros por día, mes y año
-
-### 10. Navegación
-- Navbar pública con menú responsive
-- Sidebar administrativo colapsable
-- Rutas protegidas por rol
-- Separación de vistas por rol
-
-## Roles y Permisos
-
+## Roles y permisos
 | Rol | Acceso |
 |-----|--------|
-| **Dueño** | Dashboard global, CRUD de todo, métricas |
-| **Administrador** | CRUD de su sucursal, ver citas, clientes, empleados |
-| **Barbero** | Ver sus citas asignadas |
-| **Cliente** | Ver servicios, productos, sucursales, agendar citas |
+| **Propietario (owner)** | Dashboard global, CRUD completo de todas las entidades, puede eliminar |
+| **Administrador (admin)** | CRUD de servicios, empleados, clientes, productos y citas de su sucursal |
+| **Barbero** | Consultar su calendario e historial de citas |
+| **Cliente** | Agendar citas, ver sus citas, gestionar perfil |
 
 ## API Endpoints
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| POST | /api/auth/register | No | Registro de usuario |
+| POST | /api/auth/login | No | Inicio de sesión |
+| GET | /api/auth/me | Sí | Obtener perfil actual |
+| PUT | /api/auth/me | Sí | Actualizar perfil |
+| PUT | /api/auth/change-password | Sí | Cambiar contraseña |
+| GET | /api/branches | Sí (owner/admin) | Listar sucursales |
+| POST | /api/branches | Sí (owner/admin) | Crear sucursal |
+| PUT | /api/branches/:id | Sí (owner/admin) | Actualizar sucursal |
+| DELETE | /api/branches/:id | Sí (owner) | Eliminar sucursal |
+| GET | /api/services | Sí (owner/admin) | Listar servicios |
+| POST | /api/services | Sí (owner/admin) | Crear servicio |
+| PUT | /api/services/:id | Sí (owner/admin) | Actualizar servicio |
+| DELETE | /api/services/:id | Sí (owner) | Eliminar servicio |
+| GET | /api/appointments | Sí | Listar citas |
+| POST | /api/appointments | Sí | Crear cita |
+| PUT | /api/appointments/:id | Sí | Actualizar cita |
+| GET | /api/products | Sí (owner/admin) | Listar productos |
+| POST | /api/products | Sí (owner/admin) | Crear producto |
+| PUT | /api/products/:id | Sí (owner/admin) | Actualizar producto |
+| DELETE | /api/products/:id | Sí (owner) | Eliminar producto |
+| GET | /api/dashboard | Sí (owner) | Dashboard con estadísticas |
+| GET | /api/public/branches | No | Sucursales públicas |
+| GET | /api/public/services | No | Servicios públicos |
+| GET | /api/public/products | No | Productos públicos |
+| GET | /api/public/barbers/:branchId | No | Barberos por sucursal |
+| POST | /api/public/appointments | No | Crear cita (guest) |
 
-### Auth
-- `POST /api/auth/register` — Registro
-- `POST /api/auth/login` — Login
-- `GET /api/auth/me` — Usuario actual
-- `PUT /api/auth/me` — Actualizar perfil
-- `PUT /api/auth/change-password` — Cambiar contraseña
-
-### Sucursales
-- `GET /api/branches` — Listar (admin/owner)
-- `GET /api/branches/:id` — Obtener una
-- `POST /api/branches` — Crear (owner/admin)
-- `PUT /api/branches/:id` — Actualizar (owner/admin)
-- `DELETE /api/branches/:id` — Eliminar (owner)
-- `GET /api/public/branches` — Público
-
-### Servicios
-- `GET /api/services` — Listar (admin/owner)
-- `GET /api/services/:id` — Obtener una
-- `POST /api/services` — Crear (owner/admin)
-- `PUT /api/services/:id` — Actualizar (owner/admin)
-- `DELETE /api/services/:id` — Eliminar (owner)
-- `GET /api/public/services` — Público
-
-### Citas
-- `GET /api/appointments` — Listar (con filtros)
-- `GET /api/appointments/mine` — Mis citas
-- `GET /api/appointments/available-slots` — Horarios disponibles
-- `POST /api/appointments` — Crear
-- `PUT /api/appointments/:id` — Actualizar
-- `PATCH /api/appointments/:id/cancel` — Cancelar
-
-### Productos
-- `GET /api/products` — Listar (admin/owner)
-- `POST /api/products` — Crear (owner/admin)
-- `PUT /api/products/:id` — Actualizar (owner/admin)
-- `DELETE /api/products/:id` — Eliminar (owner)
-- `GET /api/public/products` — Público
-
-### Dashboard
-- `GET /api/dashboard` — Métricas (solo owner)
-
-## Paleta de Colores
-
+## Paleta de colores
 | Color | Hex | Uso |
 |-------|-----|-----|
-| Negro | `#000000` | Fondo principal |
-| Carbón | `#1A1A1A` | Cards, sidebar |
-| Azul | `#004B7A` | Botones primarios, links |
-| Rojo | `#9B0000` | Eliminar, alertas |
-| Blanco | `#FFFFFF` | Textos principales |
-| Gris | `#CFCFCF` | Textos secundarios |
-
-## Licencia
-
-Proyecto de aprendizaje — LIGUS BARBER
+| Negro | #000000 | Fondo principal |
+| Azul | #004B7A | Acentos, botones primarios |
+| Rojo | #9B0000 | Acentos, alertas |
+| Blanco | #FFFFFF | Texto, fondos alternos |
+| Gris | #CFCFCF | Texto secundario |
+| Carbón | #1A1A1A | Fondos de cards |
