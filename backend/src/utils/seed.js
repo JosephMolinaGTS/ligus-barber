@@ -59,7 +59,7 @@ const seed = async () => {
     // -----------------------------------------------------------
     // 3. Crear Administrador de sucursal
     // -----------------------------------------------------------
-    const admin = await User.create({
+    const adminCentro = await User.create({
       name: 'Admin Centro',
       email: 'admincentro@gmail.com',
       password: 'Admin2024!',
@@ -67,7 +67,17 @@ const seed = async () => {
       role: 'admin',
       branch: branches[0]._id,
     });
-    console.log('👤 Admin creado: admincentro@gmail.com / Admin2024!');
+    console.log('👤 Admin Centro creado: admincentro@gmail.com / Admin2024!');
+
+    const adminNorte = await User.create({
+      name: 'Admin Norte',
+      email: 'adminnorte@gmail.com',
+      password: 'AdminNorte2024!',
+      phone: '667 345 6789',
+      role: 'admin',
+      branch: branches[1]._id,
+    });
+    console.log('👤 Admin Norte creado: adminnorte@gmail.com / AdminNorte2024!');
 
     // -----------------------------------------------------------
     // 4. Crear Barberos (3 por sucursal)
@@ -125,7 +135,15 @@ const seed = async () => {
       },
     ];
 
-    const barbers = await User.insertMany(barbersData);
+    // insertMany NO ejecuta pre-save hooks, así que hasheamos manualmente
+    const SALT_ROUNDS = 12;
+    const hashedBarbers = await Promise.all(
+      barbersData.map(async (b) => ({
+        ...b,
+        password: await bcrypt.hash(b.password, SALT_ROUNDS),
+      }))
+    );
+    const barbers = await User.insertMany(hashedBarbers);
     console.log(
       '✂️  Barberos creados:',
       barbers.map((b) => b.name).join(', ')
@@ -170,9 +188,23 @@ const seed = async () => {
         phone: '667 333 4455',
         role: 'client',
       },
+      {
+        name: 'Demo User',
+        email: 'demo@demo.com',
+        password: 'Demo1234',
+        phone: '667 123 4567',
+        role: 'client',
+      },
     ];
 
-    const clients = await User.insertMany(clientsData);
+    // insertMany NO ejecuta pre-save hooks, así que hasheamos manualmente
+    const hashedClients = await Promise.all(
+      clientsData.map(async (c) => ({
+        ...c,
+        password: await bcrypt.hash(c.password, SALT_ROUNDS),
+      }))
+    );
+    const clients = await User.insertMany(hashedClients);
     console.log(
       '👤 Clientes creados:',
       clients.map((c) => c.name).join(', ')
@@ -440,10 +472,11 @@ const seed = async () => {
 
     console.log('\n🎉 ¡Seed completado exitosamente!');
     console.log('\n📋 Credenciales de prueba:');
-    console.log('   Dueño:   duenoligus@gmail.com  / Ligus2024!');
-    console.log('   Admin:   admincentro@gmail.com / Admin2024!');
-    console.log('   Barbero: rodcarlos@gmail.com   / Barber2024a!');
-    console.log('   Cliente: perjuan@gmail.com     / Client2024!');
+    console.log('   Dueño:        duenoligus@gmail.com   / Ligus2024!');
+    console.log('   Admin Centro: admincentro@gmail.com  / Admin2024!');
+    console.log('   Admin Norte:  adminnorte@gmail.com   / AdminNorte2024!');
+    console.log('   Barbero:      rodcarlos@gmail.com    / Barber2024a!');
+    console.log('   Cliente:      perjuan@gmail.com      / Client2024!');
 
     process.exit(0);
   } catch (error) {

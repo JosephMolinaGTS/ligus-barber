@@ -49,6 +49,17 @@ app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/public', require('./routes/publicRoutes'));
 
 // -----------------------------------------------------------
+// Servir archivos estáticos del frontend en producción
+// -----------------------------------------------------------
+if (process.env.NODE_ENV === 'production') {
+  const path = require('path');
+  app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
+  });
+}
+
+// -----------------------------------------------------------
 // Ruta base — Health check
 // -----------------------------------------------------------
 app.get('/api', (req, res) => {

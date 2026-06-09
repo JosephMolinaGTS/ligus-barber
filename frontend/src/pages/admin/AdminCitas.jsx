@@ -23,7 +23,7 @@ export default function AdminCitas() {
       if (filters.startDate) params.startDate = filters.startDate;
       if (filters.endDate) params.endDate = filters.endDate;
 
-      const res = await api.appointments.getAll(params);
+      const res = await api.appointments.getMine(params);
       setAppointments(res.data.data);
     } catch (error) {
       toast.error('Error al cargar citas');

@@ -6,7 +6,7 @@ const User = require('../models/User');
 // ============================================================
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role } = req.body;
+    const { name, email, password, phone } = req.body;
 
     // Verificar si el email ya está registrado
     const existingUser = await User.findOne({ email });
@@ -17,14 +17,13 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    // Crear usuario (solo permitimos crear como client por defecto)
-    // El owner puede crear usuarios con otros roles después
+    // Crear usuario — siempre como client (el owner crea otros roles desde su panel)
     const user = await User.create({
       name,
       email,
       password,
       phone,
-      role: role || 'client',
+      role: 'client',
     });
 
     // Generar token
