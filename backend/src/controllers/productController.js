@@ -21,7 +21,7 @@ exports.getProducts = async (req, res, next) => {
       query.name = { $regex: search, $options: 'i' };
     }
     if (branch) {
-      query.branch = branch;
+      query.branches = { $in: [branch] };
     }
     if (category) {
       query.category = category;
@@ -32,7 +32,7 @@ exports.getProducts = async (req, res, next) => {
 
     const total = await Product.countDocuments(query);
     const products = await Product.find(query)
-      .populate('branch', 'name')
+      .populate('branches', 'name')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
@@ -58,7 +58,7 @@ exports.getProducts = async (req, res, next) => {
 exports.getProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id).populate(
-      'branch',
+      'branches',
       'name address'
     );
 
@@ -161,12 +161,12 @@ exports.getPublicProducts = async (req, res, next) => {
     const { branch = '', category = '', search = '' } = req.query;
     const query = { isActive: true };
 
-    if (branch) query.branch = branch;
+    if (branch) query.branches = { $in: [branch] };
     if (category) query.category = category;
     if (search) query.name = { $regex: search, $options: 'i' };
 
     const products = await Product.find(query)
-      .populate('branch', 'name')
+      .populate('branches', 'name')
       .sort({ isPromoted: -1, name: 1 });
 
     res.status(200).json({

@@ -3,6 +3,7 @@ import api from '../../services/api';
 import StatsCard from '../../components/StatsCard';
 import { useAuth } from '../../context/AuthContext';
 import { FiCalendar, FiCheck, FiClock, FiX, FiUser, FiScissors } from 'react-icons/fi';
+import { formatPhone } from '../../utils/format';
 
 // ============================================================
 // BarberDashboard — Panel principal del barbero
@@ -132,7 +133,7 @@ export default function BarberDashboard() {
                     </span>
                     {(apt.client?.phone || apt.guestPhone) && (
                       <span className="text-gray-500">
-                        · {apt.client?.phone || apt.guestPhone}
+                        · {formatPhone(apt.client?.phone || apt.guestPhone)}
                       </span>
                     )}
                   </div>

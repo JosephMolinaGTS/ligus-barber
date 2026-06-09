@@ -38,17 +38,17 @@ const ProductSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    // Stock general (compartido entre sucursales)
     stock: {
       type: Number,
       default: 0,
       min: [0, 'El stock no puede ser negativo'],
     },
-    // Sucursal donde se vende
-    branch: {
+    // Sucursales donde se vende
+    branches: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Branch',
-      required: [true, 'La sucursal es obligatoria'],
-    },
+    }],
     // Indicador de producto promocionado (aparece en landing)
     isPromoted: {
       type: Boolean,
