@@ -5,6 +5,7 @@ import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { formatPhone } from '../../utils/format';
 
 // ============================================================
 // AdminClientes — CRUD de clientes
@@ -92,7 +93,7 @@ export default function AdminClientes() {
   const columns = [
     { key: 'name', label: 'Nombre' },
     { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Teléfono', render: (val) => val || '-' },
+    { key: 'phone', label: 'Teléfono', render: (val) => formatPhone(val) || '-' },
     {
       key: 'appointmentCount',
       label: 'Citas',

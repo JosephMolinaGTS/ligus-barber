@@ -1,4 +1,5 @@
 import { FiMapPin, FiPhone, FiClock } from 'react-icons/fi';
+import { formatPhone } from '../utils/format';
 
 // ============================================================
 // BranchCard — Tarjeta de sucursal
@@ -40,7 +41,7 @@ export default function BranchCard({ branch }) {
           </div>
           <div className="flex items-center gap-2 text-barber-gray text-sm">
             <FiPhone size={14} className="text-barber-blue shrink-0" />
-            <span>{branch.phone}</span>
+            <span>{formatPhone(branch.phone)}</span>
           </div>
           {branch.schedule && (
             <div className="flex items-center gap-2 text-barber-gray text-sm">

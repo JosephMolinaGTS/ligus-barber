@@ -55,10 +55,10 @@ export default function ProductCard({ product }) {
           </span>
         </div>
 
-        {/* Sucursal */}
-        {product.branch && (
+        {/* Sucursales */}
+        {product.branches && product.branches.length > 0 && (
           <p className="text-barber-gray text-xs mt-2">
-            📍 {product.branch.name}
+            📍 {product.branches.map((b) => b.name).join(' · ')}
           </p>
         )}
 

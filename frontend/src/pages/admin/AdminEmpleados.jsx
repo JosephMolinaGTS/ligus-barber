@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { formatPhone } from '../../utils/format';
 
 // ============================================================
 // AdminEmpleados — CRUD de empleados/barberos
 // ============================================================
 export default function AdminEmpleados() {
+  const { user, isOwner } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,8 +33,14 @@ export default function AdminEmpleados() {
   const loadData = async () => {
     setLoading(true);
     try {
+      const params = { search, limit: 50 };
+      // Admin solo ve empleados de su sucursal
+      if (!isOwner && user?.branch) {
+        params.branch = user.branch;
+      }
+
       const [empRes, branchRes] = await Promise.all([
-        api.employees.getAll({ search, limit: 50 }),
+        api.employees.getAll(params),
         api.branches.getAll({ limit: 50 }),
       ]);
       setEmployees(empRes.data.data);
@@ -48,7 +57,15 @@ export default function AdminEmpleados() {
   }, [search]);
 
   const handleCreate = () => {
-    setForm({ name: '', email: '', phone: '', role: 'barber', branch: '', password: '123456' });
+    setForm({
+      name: '',
+      email: '',
+      phone: '',
+      role: 'barber',
+      // Admin solo puede crear en su sucursal
+      branch: isOwner ? '' : user?.branch || '',
+      password: '123456',
+    });
     setIsEditing(false);
     setModalOpen(true);
   };
@@ -110,7 +127,7 @@ export default function AdminEmpleados() {
   const columns = [
     { key: 'name', label: 'Nombre' },
     { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Teléfono', render: (val) => val || '-' },
+    { key: 'phone', label: 'Teléfono', render: (val) => formatPhone(val) || '-' },
     {
       key: 'role',
       label: 'Rol',
@@ -118,11 +135,16 @@ export default function AdminEmpleados() {
         <span className="capitalize">{val === 'barber' ? 'Barbero' : 'Admin'}</span>
       ),
     },
-    {
-      key: 'branch',
-      label: 'Sucursal',
-      render: (val) => val?.name || '-',
-    },
+    // Owner ve columna de sucursal, admin no (ya sabe cuál es)
+    ...(isOwner
+      ? [
+          {
+            key: 'branch',
+            label: 'Sucursal',
+            render: (val) => val?.name || '-',
+          },
+        ]
+      : []),
     {
       key: 'isActive',
       label: 'Estado',
@@ -227,7 +249,8 @@ export default function AdminEmpleados() {
             <select
               value={form.branch}
               onChange={(e) => setForm({ ...form, branch: e.target.value })}
-              className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-2 text-barber-white text-sm"
+              disabled={!isOwner}
+              className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-2 text-barber-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               required
             >
               <option value="">Seleccionar sucursal</option>

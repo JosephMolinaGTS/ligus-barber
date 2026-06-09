@@ -10,20 +10,35 @@ require('dotenv').config({ path: require('path').join(__dirname, '../../.env') }
 
 // ============================================================
 // Seed Script — Datos de prueba para LIGUS BARBER
-// Ejecutar con: npm run seed
+// Ejecutar con: npm run seed (no borra datos existentes)
+//               npm run seed:reset (borra todo y recrea)
 // ============================================================
 const seed = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Conectado a MongoDB para seeding...\n');
 
-    // Limpiar colecciones existentes
-    await User.deleteMany({});
-    await Branch.deleteMany({});
-    await Service.deleteMany({});
-    await Product.deleteMany({});
-    await Appointment.deleteMany({});
-    console.log('🗑️  Base de datos limpiada\n');
+    const isReset = process.argv.includes('--reset');
+
+    if (isReset) {
+      // Modo reset: borrar todo y recrear
+      console.log('🗑️  Modo RESET: borrando todos los datos...\n');
+      await User.deleteMany({});
+      await Branch.deleteMany({});
+      await Service.deleteMany({});
+      await Product.deleteMany({});
+      await Appointment.deleteMany({});
+      console.log('✅ Base de datos limpiada\n');
+    } else {
+      // Modo normal: no borrar, solo agregar si está vacío
+      const existingBranches = await Branch.countDocuments();
+      if (existingBranches > 0) {
+        console.log('⚠️  Ya existen datos en la base de datos. Saltando seed...');
+        console.log('   Si querés resetear, ejecutá: npm run seed:reset\n');
+        process.exit(0);
+      }
+      console.log('📝 Base de datos vacía, creando datos iniciales...\n');
+    }
 
     // -----------------------------------------------------------
     // 1. Crear Sucursales
@@ -34,12 +49,14 @@ const seed = async () => {
         address: 'Pascual Orozco 1117, Culiacán Rosales, Sinaloa, México',
         phone: '667 234 5678',
         schedule: { open: '10:00', close: '20:00', days: [1, 2, 3, 4, 5, 6, 0] },
+        image: '/images/LIGUS Centro.jpg',
       },
       {
         name: 'LIGUS Norte',
         address: 'Fraternidad 1572, Culiacán Rosales, Sinaloa, México',
         phone: '667 345 6789',
         schedule: { open: '10:00', close: '20:00', days: [1, 2, 3, 4, 5, 6, 0] },
+        image: '/images/LIGUS Norte.png',
       },
     ]);
     console.log('🏢 Sucursales creadas:', branches.map((b) => b.name).join(', '));
@@ -271,16 +288,19 @@ const seed = async () => {
     );
 
     // -----------------------------------------------------------
-    // 7. Crear Productos
+    // 7. Crear Productos (disponibles en ambas sucursales)
     // -----------------------------------------------------------
+    const allBranchIds = branches.map((b) => b._id);
+
     const productsData = [
       {
-        name: 'Pomada Matte LIGUS',
+        name: 'Pomada Matte',
         description: 'Fijación fuerte con acabado mate. Ideal para estilos formales.',
         price: 850,
         category: 'pomadas',
         stock: 25,
-        branch: branches[0]._id,
+        branches: allBranchIds,
+        image: '/images/Pomada Matte.jpeg',
         isPromoted: true,
       },
       {
@@ -289,16 +309,18 @@ const seed = async () => {
         price: 750,
         category: 'ceras',
         stock: 30,
-        branch: branches[0]._id,
+        branches: allBranchIds,
+        image: '/images/Cera texturizadora.jpeg',
         isPromoted: false,
       },
       {
-        name: 'Shampoo Anticaspa LIGUS',
+        name: 'Shampoo Anticaspa',
         description: 'Shampoo profesional con fórmula anticaspa.',
         price: 600,
         category: 'shampoo',
         stock: 40,
-        branch: branches[1]._id,
+        branches: allBranchIds,
+        image: '/images/Shampoo Anticaspa.jpeg',
         isPromoted: true,
       },
       {
@@ -307,16 +329,18 @@ const seed = async () => {
         price: 950,
         category: 'aceites',
         stock: 20,
-        branch: branches[0]._id,
+        branches: allBranchIds,
+        image: '/images/Aceite de Barba Premium.jpeg',
         isPromoted: true,
       },
       {
-        name: 'After Shave LIGUS',
+        name: 'After Shave',
         description: 'After shave refrescante con aroma a madera.',
         price: 700,
         category: 'after-shave',
         stock: 35,
-        branch: branches[1]._id,
+        branches: allBranchIds,
+        image: '/images/After Shave.jpeg',
         isPromoted: false,
       },
       {
@@ -325,7 +349,8 @@ const seed = async () => {
         price: 450,
         category: 'peines',
         stock: 50,
-        branch: branches[0]._id,
+        branches: allBranchIds,
+        image: '/images/Peine de Madera.jpeg',
         isPromoted: false,
       },
       {
@@ -334,7 +359,8 @@ const seed = async () => {
         price: 2200,
         category: 'kits',
         stock: 15,
-        branch: branches[1]._id,
+        branches: allBranchIds,
+        image: '/images/Kit Cuidado Personal.jpeg',
         isPromoted: true,
       },
       {
@@ -343,7 +369,8 @@ const seed = async () => {
         price: 650,
         category: 'pomadas',
         stock: 30,
-        branch: branches[1]._id,
+        branches: allBranchIds,
+        image: '/images/Pomada Clásica Hold.jpeg',
         isPromoted: false,
       },
     ];
@@ -477,6 +504,7 @@ const seed = async () => {
     console.log('   Admin Norte:  adminnorte@gmail.com   / AdminNorte2024!');
     console.log('   Barbero:      rodcarlos@gmail.com    / Barber2024a!');
     console.log('   Cliente:      perjuan@gmail.com      / Client2024!');
+    console.log('\n💡 Tip: npm run seed (no borra) | npm run seed:reset (borra todo)');
 
     process.exit(0);
   } catch (error) {

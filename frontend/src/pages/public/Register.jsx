@@ -8,7 +8,8 @@ import toast from 'react-hot-toast';
 // ============================================================
 export default function Register() {
   const [form, setForm] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     password: '',
@@ -27,13 +28,28 @@ export default function Register() {
       return;
     }
 
-    if (form.password.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres');
+    if (form.firstName.trim().length < 3) {
+      toast.error('El nombre debe tener al menos 3 letras');
       return;
     }
 
-    if (!form.name.trim()) {
-      toast.error('El nombre es obligatorio');
+    if (form.lastName.trim().length < 3) {
+      toast.error('El apellido debe tener al menos 3 letras');
+      return;
+    }
+
+    if (!form.phone.trim()) {
+      toast.error('El teléfono es obligatorio');
+      return;
+    }
+
+    if (!/^\d{10}$/.test(form.phone.replace(/\s/g, ''))) {
+      toast.error('El teléfono debe tener 10 dígitos (ej: 6671234567)');
+      return;
+    }
+
+    if (form.password.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
@@ -46,7 +62,8 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const { confirmPassword, ...data } = form;
+      const { confirmPassword, firstName, lastName, ...rest } = form;
+      const data = { ...rest, name: `${firstName} ${lastName}` };
       await register(data);
       toast.success('Cuenta creada correctamente');
       navigate('/');
@@ -77,17 +94,30 @@ export default function Register() {
           className="bg-barber-charcoal rounded-xl border border-barber-dark p-6"
         >
           <div className="space-y-4">
-            {/* Nombre */}
-            <div>
-              <label className="block text-barber-gray text-sm mb-1">Nombre</label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white focus:border-barber-blue focus:outline-none text-sm"
-                placeholder="Tu nombre completo"
-                required
-              />
+            {/* Nombre y Apellido */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-barber-gray text-sm mb-1">Nombre *</label>
+                <input
+                  type="text"
+                  value={form.firstName}
+                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                  className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white focus:border-barber-blue focus:outline-none text-sm"
+                  placeholder="Juan"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-barber-gray text-sm mb-1">Apellido *</label>
+                <input
+                  type="text"
+                  value={form.lastName}
+                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                  className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white focus:border-barber-blue focus:outline-none text-sm"
+                  placeholder="Pérez"
+                  required
+                />
+              </div>
             </div>
 
             {/* Email */}
@@ -106,14 +136,20 @@ export default function Register() {
             {/* Teléfono */}
             <div>
               <label className="block text-barber-gray text-sm mb-1">
-                Teléfono (opcional)
+                Teléfono *
               </label>
               <input
                 type="tel"
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                onChange={(e) => {
+                  // Solo permitir números, máximo 10
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setForm({ ...form, phone: value });
+                }}
                 className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white focus:border-barber-blue focus:outline-none text-sm"
-                placeholder="667 xxx xxxx"
+                placeholder="6671234567"
+                maxLength={10}
+                required
               />
             </div>
 

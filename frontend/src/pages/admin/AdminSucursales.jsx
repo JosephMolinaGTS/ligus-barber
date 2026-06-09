@@ -4,8 +4,8 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { useAuth } from '../../context/AuthContext';
 import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { formatPhone } from '../../utils/format';
 
 // ============================================================
 // AdminSucursales — CRUD de sucursales
@@ -108,7 +108,7 @@ export default function AdminSucursales() {
   const columns = [
     { key: 'name', label: 'Nombre' },
     { key: 'address', label: 'Dirección' },
-    { key: 'phone', label: 'Teléfono' },
+    { key: 'phone', label: 'Teléfono', render: (val) => formatPhone(val) },
     {
       key: 'schedule',
       label: 'Horario',

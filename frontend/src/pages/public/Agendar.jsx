@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { FiCheck, FiArrowLeft } from 'react-icons/fi';
 import HorizontalCalendar from '../../components/HorizontalCalendar';
 import TimeSlotPicker from '../../components/TimeSlotPicker';
+import { formatPhone } from '../../utils/format';
 
 // ============================================================
 // Agendar — Flujo multi-paso para reservar una cita
@@ -112,7 +113,25 @@ export default function Agendar() {
   // Validar formulario de contacto
   // -----------------------------------------------------------
   const isContactValid = () => {
-    return contact.firstName.trim() && contact.lastName.trim() && contact.phone.trim();
+    const nameValid = contact.firstName.trim().length >= 3;
+    const lastValid = contact.lastName.trim().length >= 3;
+    const phoneValid = /^\d{10}$/.test(contact.phone.replace(/\s/g, ''));
+    return nameValid && lastValid && phoneValid;
+  };
+
+  // Obtener errores específicos para mostrar al usuario
+  const getContactErrors = () => {
+    const errors = [];
+    if (contact.firstName.trim().length > 0 && contact.firstName.trim().length < 3) {
+      errors.push('El nombre debe tener al menos 3 letras');
+    }
+    if (contact.lastName.trim().length > 0 && contact.lastName.trim().length < 3) {
+      errors.push('El apellido debe tener al menos 3 letras');
+    }
+    if (contact.phone.length > 0 && !/^\d{10}$/.test(contact.phone.replace(/\s/g, ''))) {
+      errors.push('El teléfono debe tener 10 dígitos (ej: 6671234567)');
+    }
+    return errors;
   };
 
   // -----------------------------------------------------------
@@ -213,7 +232,7 @@ export default function Agendar() {
                 >
                   <h3 className="text-white font-semibold">{branch.name}</h3>
                   <p className="text-gray-400 text-sm mt-1">{branch.address}</p>
-                  <p className="text-gray-500 text-xs mt-1">📞 {branch.phone}</p>
+                  <p className="text-gray-500 text-xs mt-1">📞 {formatPhone(branch.phone)}</p>
                 </button>
               ))}
             </div>
@@ -242,7 +261,7 @@ export default function Agendar() {
                       </span>
                     </div>
                     <p className="text-white font-semibold">{barber.name}</p>
-                    <p className="text-gray-400 text-sm">{barber.phone}</p>
+                    <p className="text-gray-400 text-sm">{formatPhone(barber.phone)}</p>
                   </button>
                 ))}
               </div>
@@ -312,13 +331,18 @@ export default function Agendar() {
                   <label className="block text-gray-400 text-sm mb-1">
                     Teléfono *
                   </label>
-                  <input
-                    type="tel"
-                    value={contact.phone}
-                    onChange={(e) => setContact({ ...contact, phone: e.target.value })}
-                    placeholder="667 xxx xxxx"
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
-                  />
+                    <input
+                      type="tel"
+                      value={contact.phone}
+                      onChange={(e) => {
+                        // Solo permitir números, máximo 10
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setContact({ ...contact, phone: value });
+                      }}
+                      placeholder="6671234567"
+                      maxLength={10}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                    />
                 </div>
                 <div>
                   <label className="block text-gray-400 text-sm mb-1">
@@ -339,7 +363,7 @@ export default function Agendar() {
                   <span className="text-gray-400">Nombre:</span> {user?.name}
                 </p>
                 <p className="text-white">
-                  <span className="text-gray-400">Teléfono:</span> {user?.phone || 'No registrado'}
+                  <span className="text-gray-400">Teléfono:</span> {formatPhone(user?.phone) || 'No registrado'}
                 </p>
               </div>
             )}
@@ -347,7 +371,8 @@ export default function Agendar() {
             <button
               onClick={() => {
                 if (!isAuthenticated && !isContactValid()) {
-                  toast.error('Completa nombre, apellido y teléfono');
+                  const errors = getContactErrors();
+                  errors.forEach((err) => toast.error(err));
                   return;
                 }
                 setStep(7);
@@ -373,7 +398,7 @@ export default function Agendar() {
               {!isAuthenticated && (
                 <>
                   <SummaryRow label="Nombre" value={`${contact.firstName} ${contact.lastName}`} />
-                  <SummaryRow label="Teléfono" value={contact.phone} />
+                  <SummaryRow label="Teléfono" value={formatPhone(contact.phone)} />
                   {contact.observations && (
                     <SummaryRow label="Observaciones" value={contact.observations} />
                   )}
