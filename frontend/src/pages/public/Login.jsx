@@ -16,6 +16,18 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      toast.error('Ingresa un correo electrónico válido');
+      return;
+    }
+
+    if (form.password.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
     setLoading(true);
 
     try {

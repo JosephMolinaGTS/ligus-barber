@@ -50,6 +50,19 @@ export default function AdminClientes() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      toast.error('Ingresa un correo electrónico válido');
+      return;
+    }
+
+    const password = form.password || '123456';
+    if (password.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
     try {
       if (isEditing) {
         await api.clients.update(selected._id, form);

@@ -21,6 +21,22 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      toast.error('Ingresa un correo electrónico válido');
+      return;
+    }
+
+    if (form.password.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    if (!form.name.trim()) {
+      toast.error('El nombre es obligatorio');
+      return;
+    }
+
     // Validar contraseñas
     if (form.password !== form.confirmPassword) {
       toast.error('Las contraseñas no coinciden');
