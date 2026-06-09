@@ -1,0 +1,7 @@
+{
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ]
+}
