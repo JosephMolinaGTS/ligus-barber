@@ -22,6 +22,12 @@ export default function Perfil() {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
+
+    if (!form.name.trim()) {
+      toast.error('El nombre es obligatorio');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -36,6 +42,16 @@ export default function Perfil() {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+
+    if (!passwordForm.currentPassword) {
+      toast.error('Ingresa tu contraseña actual');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('La nueva contraseña debe tener al menos 6 caracteres');
+      return;
+    }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       toast.error('Las contraseñas no coinciden');
@@ -80,11 +96,12 @@ export default function Perfil() {
         <form onSubmit={handleProfileSubmit} className="space-y-4">
           <div>
             <label className="block text-barber-gray text-sm mb-1">Nombre</label>
-            <input
+              <input
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white focus:border-barber-blue focus:outline-none text-sm"
+              required
             />
           </div>
           <div>
