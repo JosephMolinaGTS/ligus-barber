@@ -14,7 +14,11 @@ const app = express();
 // -----------------------------------------------------------
 // Middleware globales
 // -----------------------------------------------------------
-app.use(cors()); // Permitir requests del frontend
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json()); // Parsear JSON en el body
 
 // -----------------------------------------------------------
