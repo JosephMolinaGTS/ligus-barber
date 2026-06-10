@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import { phoneMask } from '../../utils/format';
 import toast from 'react-hot-toast';
 
 // ============================================================
@@ -109,7 +110,9 @@ export default function Perfil() {
             <input
               type="tel"
               value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              onChange={(e) => setForm({ ...form, phone: phoneMask(e.target.value) })}
+              placeholder="667 123 4567"
+              maxLength={12}
               className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white focus:border-barber-blue focus:outline-none text-sm"
             />
           </div>
