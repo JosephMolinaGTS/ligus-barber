@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -54,12 +55,14 @@ app.use('/api/public', require('./routes/publicRoutes'));
 
 // -----------------------------------------------------------
 // Servir archivos estáticos del frontend en producción
+// (solo si el frontend está compilado junto al backend)
 // -----------------------------------------------------------
-if (process.env.NODE_ENV === 'production') {
-  const path = require('path');
-  app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+const fs = require('fs');
+const frontendDist = path.join(__dirname, '../../frontend/dist');
+if (process.env.NODE_ENV === 'production' && fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
+    res.sendFile(path.join(frontendDist, 'index.html'));
   });
 }
 
