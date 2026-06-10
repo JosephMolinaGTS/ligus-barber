@@ -505,12 +505,16 @@ const seed = async () => {
     console.log('   Barbero:      rodcarlos@gmail.com    / Barber2024a!');
     console.log('   Cliente:      perjuan@gmail.com      / Client2024!');
     console.log('\n💡 Tip: npm run seed (no borra) | npm run seed:reset (borra todo)');
-
-    process.exit(0);
   } catch (error) {
     console.error('❌ Error durante el seeding:', error);
-    process.exit(1);
+    throw error;
   }
 };
 
-seed();
+// Export for API route usage
+module.exports = { seedDatabase: seed };
+
+// Run directly via CLI
+if (require.main === module) {
+  seed().then(() => process.exit(0)).catch(() => process.exit(1));
+}
