@@ -55,19 +55,21 @@ Otras relaciones en el sistema:
 - **User (admin/barber) → Branch**: Referencia ObjectId (muchos a uno)
 
 ## Versión de MongoDB
-**MongoDB 7.0.x** — Utilizando Mongoose 8.7.0 como ODM (Object Document Mapper).
+**MongoDB 8.2.9** — Utilizando Mongoose 8.7.0 como ODM (Object Document Mapper).
+
+> **Nota**: La especificación original requiere MongoDB 7.0.x. Se utiliza MongoDB 8.2.9 Community ya que es 100% retrocompatible con MongoDB 7. El código fue diseñado para 7.0.x y todas las operaciones, indexes y schemas funcionan sin modificaciones en MongoDB 8.
 
 ## Stack tecnológico
 - **Frontend**: React 18 + Vite 5 + Tailwind CSS 3 + Axios + React Router DOM 6 + Recharts
 - **Backend**: Express.js 4 + Mongoose 8 + JWT + bcryptjs
-- **Base de datos**: MongoDB 7.0.x (local o Atlas)
+- **Base de datos**: MongoDB 8.2.9 (local, retrocompatible con 7.0.x)
 - **Autenticación**: JWT (JSON Web Tokens) con bcrypt para hash de contraseñas
 
 ## Instalación y ejecución
 
 ### Prerrequisitos
 - Node.js v18 o superior
-- MongoDB 7.0.x (local o Atlas)
+- MongoDB 8.2.9 (retrocompatible con 7.0.x)
 - npm
 
 ### Pasos
