@@ -78,6 +78,21 @@ app.get('/api', (req, res) => {
 });
 
 // -----------------------------------------------------------
+// Ruta temporal — Seed en producción (UNA SOLA VEZ)
+// -----------------------------------------------------------
+if (process.env.NODE_ENV === 'production') {
+  app.get('/api/seed-once', async (req, res) => {
+    try {
+      const { seedDatabase } = require('./utils/seed');
+      await seedDatabase();
+      res.json({ success: true, message: 'Seed ejecutado correctamente' });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+}
+
+// -----------------------------------------------------------
 // Error handler global (debe ir al final de todas las rutas)
 // -----------------------------------------------------------
 app.use(errorHandler);
