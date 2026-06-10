@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
 const connectDB = async (retries = 5) => {
-  // Debug: mostrar la URI (sin la contraseña)
   const uri = process.env.MONGODB_URI || 'NO DEFINIDA';
   const safeUri = uri.replace(/:([^@]+)@/, ':****@');
   console.log(`🔍 MONGODB_URI (segura): ${safeUri}`);
@@ -10,7 +9,10 @@ const connectDB = async (retries = 5) => {
   for (let i = 0; i < retries; i++) {
     try {
       const conn = await mongoose.connect(process.env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        family: 4, // Forzar IPv4 (evita problemas DNS en algunos hosts)
       });
       console.log(`✅ MongoDB conectado: ${conn.connection.host}`);
       return;
@@ -26,6 +28,10 @@ const connectDB = async (retries = 5) => {
     }
   }
   console.error('❌ No se pudo conectar a MongoDB después de varios intentos');
+  // En producción, no matar el servidor — dejarlo correr para poder ver los logs
+  if (process.env.NODE_ENV !== 'production') {
+    process.exit(1);
+  }
 };
 
 module.exports = connectDB;
