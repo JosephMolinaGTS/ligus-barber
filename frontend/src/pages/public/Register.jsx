@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { phoneMask } from '../../utils/format';
 import toast from 'react-hot-toast';
 
 // ============================================================
@@ -44,7 +45,7 @@ export default function Register() {
     }
 
     if (!/^\d{10}$/.test(form.phone.replace(/\s/g, ''))) {
-      toast.error('El teléfono debe tener 10 dígitos (ej: 6671234567)');
+      toast.error('El teléfono debe tener 10 dígitos (ej: 667 123 4567)');
       return;
     }
 
@@ -141,14 +142,10 @@ export default function Register() {
               <input
                 type="tel"
                 value={form.phone}
-                onChange={(e) => {
-                  // Solo permitir números, máximo 10
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                  setForm({ ...form, phone: value });
-                }}
+                onChange={(e) => setForm({ ...form, phone: phoneMask(e.target.value) })}
                 className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-3 text-barber-white focus:border-barber-blue focus:outline-none text-sm"
-                placeholder="6671234567"
-                maxLength={10}
+                placeholder="667 123 4567"
+                maxLength={12}
                 required
               />
             </div>

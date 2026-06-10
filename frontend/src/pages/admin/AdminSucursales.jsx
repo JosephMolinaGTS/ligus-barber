@@ -5,7 +5,7 @@ import Modal from '../../components/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
-import { formatPhone } from '../../utils/format';
+import { formatPhone, phoneMask } from '../../utils/format';
 
 // ============================================================
 // AdminSucursales — CRUD de sucursales
@@ -197,7 +197,9 @@ export default function AdminSucursales() {
             <input
               type="tel"
               value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              onChange={(e) => setForm({ ...form, phone: phoneMask(e.target.value) })}
+              placeholder="667 123 4567"
+              maxLength={12}
               className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-2 text-barber-white text-sm"
               required
             />

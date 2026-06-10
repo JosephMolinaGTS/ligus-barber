@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { FiCheck, FiArrowLeft } from 'react-icons/fi';
 import HorizontalCalendar from '../../components/HorizontalCalendar';
 import TimeSlotPicker from '../../components/TimeSlotPicker';
-import { formatPhone } from '../../utils/format';
+import { formatPhone, phoneMask } from '../../utils/format';
 
 // ============================================================
 // Agendar — Flujo multi-paso para reservar una cita
@@ -129,7 +129,7 @@ export default function Agendar() {
       errors.push('El apellido debe tener al menos 3 letras');
     }
     if (contact.phone.length > 0 && !/^\d{10}$/.test(contact.phone.replace(/\s/g, ''))) {
-      errors.push('El teléfono debe tener 10 dígitos (ej: 6671234567)');
+      errors.push('El teléfono debe tener 10 dígitos (ej: 667 123 4567)');
     }
     return errors;
   };
@@ -334,13 +334,9 @@ export default function Agendar() {
                     <input
                       type="tel"
                       value={contact.phone}
-                      onChange={(e) => {
-                        // Solo permitir números, máximo 10
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                        setContact({ ...contact, phone: value });
-                      }}
-                      placeholder="6671234567"
-                      maxLength={10}
+                      onChange={(e) => setContact({ ...contact, phone: phoneMask(e.target.value) })}
+                      placeholder="667 123 4567"
+                      maxLength={12}
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
                     />
                 </div>
