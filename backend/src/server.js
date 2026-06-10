@@ -54,19 +54,6 @@ app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/public', require('./routes/publicRoutes'));
 
 // -----------------------------------------------------------
-// Servir archivos estáticos del frontend en producción
-// (solo si el frontend está compilado junto al backend)
-// -----------------------------------------------------------
-const fs = require('fs');
-const frontendDist = path.join(__dirname, '../../frontend/dist');
-if (process.env.NODE_ENV === 'production' && fs.existsSync(frontendDist)) {
-  app.use(express.static(frontendDist));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendDist, 'index.html'));
-  });
-}
-
-// -----------------------------------------------------------
 // Ruta base — Health check
 // -----------------------------------------------------------
 app.get('/api', (req, res) => {
@@ -79,6 +66,7 @@ app.get('/api', (req, res) => {
 
 // -----------------------------------------------------------
 // Ruta temporal — Seed en producción (UNA SOLA VEZ)
+// DEBE ir ANTES del catch-all del frontend
 // -----------------------------------------------------------
 if (process.env.NODE_ENV === 'production') {
   app.get('/api/seed-once', async (req, res) => {
@@ -89,6 +77,19 @@ if (process.env.NODE_ENV === 'production') {
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
+  });
+}
+
+// -----------------------------------------------------------
+// Servir archivos estáticos del frontend en producción
+// DEBE ir al final — catch-all atrapa todo lo que no sea /api/*
+// -----------------------------------------------------------
+const fs = require('fs');
+const frontendDist = path.join(__dirname, '../../frontend/dist');
+if (process.env.NODE_ENV === 'production' && fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendDist, 'index.html'));
   });
 }
 
