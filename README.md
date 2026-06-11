@@ -55,21 +55,21 @@ Otras relaciones en el sistema:
 - **User (admin/barber) → Branch**: Referencia ObjectId (muchos a uno)
 
 ## Versión de MongoDB
-**MongoDB 8.2.9** — Utilizando Mongoose 8.7.0 como ODM (Object Document Mapper).
+**MongoDB Atlas 8.0.24** — Utilizando Mongoose 8.7.0 como ODM (Object Document Mapper).
 
-> **Nota**: La especificación original requiere MongoDB 7.0.x. Se utiliza MongoDB 8.2.9 Community ya que es 100% retrocompatible con MongoDB 7. El código fue diseñado para 7.0.x y todas las operaciones, indexes y schemas funcionan sin modificaciones en MongoDB 8.
+> **Nota**: Se utiliza MongoDB Atlas (cloud) para el despliegue en producción. La versión local de desarrollo puede usar MongoDB Community 7.0.x o superior.
 
 ## Stack tecnológico
 - **Frontend**: React 18 + Vite 5 + Tailwind CSS 3 + Axios + React Router DOM 6 + Recharts
 - **Backend**: Express.js 4 + Mongoose 8 + JWT + bcryptjs
-- **Base de datos**: MongoDB 8.2.9 (local, retrocompatible con 7.0.x)
+- **Base de datos**: MongoDB Atlas 8.0.24 (cloud)
 - **Autenticación**: JWT (JSON Web Tokens) con bcrypt para hash de contraseñas
 
 ## Instalación y ejecución
 
 ### Prerrequisitos
 - Node.js v18 o superior
-- MongoDB 8.2.9 (retrocompatible con 7.0.x)
+- MongoDB Atlas (configurado en variables de entorno)
 - npm
 
 ### Pasos
@@ -81,7 +81,7 @@ cd ligus-barber
 # Backend
 cd backend
 npm install
-# Configurar archivo .env con las variables de entorno
+# Configurar archivo .env con las variables de entorno (ver abajo)
 npm run seed    # Cargar datos de ejemplo
 npm run dev     # Iniciar servidor en http://localhost:5000
 
@@ -94,10 +94,12 @@ npm run dev     # Iniciar en http://localhost:3000
 ### Variables de entorno (backend/.env)
 ```
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/ligus-barber
+MONGODB_URI=mongodb+srv://<usuario>:<password>@<cluster>.mongodb.net/ligus-barber?retryWrites=true&w=majority
 JWT_SECRET=tu-secreto-seguro-aqui
 JWT_EXPIRE=7d
 ```
+
+> **Nota**: En producción (Render), la variable `MONGODB_URI` se configura directamente en el dashboard del servicio.
 
 ## Seed de datos
 ```bash
@@ -114,7 +116,7 @@ El seed crea automáticamente:
 ## Usuario de prueba
 | Rol | Email | Contraseña |
 |-----|-------|------------|
-| **Demo (Cliente)** | **demo@demo.com** | **Demo1234** |
+| **Demo (Dueño)** | **demo@demo.com** | **Demo1234** |
 | Propietario | duenoligus@gmail.com | Ligus2024! |
 | Admin Centro | admincentro@gmail.com | Admin2024! |
 | Admin Norte | adminnorte@gmail.com | AdminNorte2024! |
