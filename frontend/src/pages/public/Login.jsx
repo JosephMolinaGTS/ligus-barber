@@ -35,7 +35,10 @@ export default function Login() {
       toast.success(`Bienvenido, ${user.name}`);
 
       // Redirigir según rol
-      if (user.role === 'owner') {
+      if (user.email === 'demo@demo.com') {
+        // Demo user: entrar a la página principal con acceso al dashboard
+        navigate('/');
+      } else if (user.role === 'owner') {
         navigate('/owner/dashboard');
       } else if (user.role === 'admin') {
         navigate('/admin');
