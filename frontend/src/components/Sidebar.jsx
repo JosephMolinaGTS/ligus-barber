@@ -170,6 +170,15 @@ export default function Sidebar() {
               <p className="text-barber-gray text-xs">{user?.email}</p>
             </div>
           )}
+          {(isOwner || isAdmin) && (
+            <Link
+              to="/"
+              className="flex items-center space-x-2 text-barber-gray hover:text-barber-white text-sm w-full mb-2"
+            >
+              <FiHome size={16} />
+              {!collapsed && <span>Volver al Inicio</span>}
+            </Link>
+          )}
           <button
             onClick={logout}
             className="flex items-center space-x-2 text-barber-gray hover:text-barber-red text-sm w-full"
