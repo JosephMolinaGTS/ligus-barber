@@ -30,7 +30,7 @@ router.post(
     body('price')
       .isFloat({ min: 0 })
       .withMessage('El precio debe ser un número positivo'),
-    body('branch').notEmpty().withMessage('La sucursal es obligatoria'),
+    body('branches').isArray({ min: 1 }).withMessage('Al menos una sucursal es obligatoria'),
   ],
   validate,
   createProduct

@@ -24,7 +24,7 @@ export default function AdminProductos() {
     price: '',
     category: 'otros',
     stock: 0,
-    branch: '',
+    branches: [],
     isPromoted: false,
   });
 
@@ -55,7 +55,7 @@ export default function AdminProductos() {
   const handleCreate = () => {
     setForm({
       name: '', description: '', price: '', category: 'otros',
-      stock: 0, branch: '', isPromoted: false,
+      stock: 0, branches: [], isPromoted: false,
     });
     setIsEditing(false);
     setModalOpen(true);
@@ -68,7 +68,7 @@ export default function AdminProductos() {
       price: prod.price,
       category: prod.category,
       stock: prod.stock,
-      branch: prod.branch?._id || prod.branch || '',
+      branches: prod.branches?.map(b => b._id || b) || [],
       isPromoted: prod.isPromoted,
     });
     setSelected(prod);
@@ -118,9 +118,9 @@ export default function AdminProductos() {
     },
     { key: 'stock', label: 'Stock' },
     {
-      key: 'branch',
-      label: 'Sucursal',
-      render: (val) => val?.name || '-',
+      key: 'branches',
+      label: 'Sucursales',
+      render: (val) => val?.map(b => b.name).join(', ') || '-',
     },
     {
       key: 'isPromoted',
@@ -249,20 +249,26 @@ export default function AdminProductos() {
               </select>
             </div>
             <div>
-              <label className="block text-barber-gray text-sm mb-1">Sucursal</label>
-              <select
-                value={form.branch}
-                onChange={(e) => setForm({ ...form, branch: e.target.value })}
-                className="w-full bg-barber-dark border border-barber-dark rounded-lg px-4 py-2 text-barber-white text-sm"
-                required
-              >
-                <option value="">Seleccionar</option>
+              <label className="block text-barber-gray text-sm mb-1">Sucursales</label>
+              <div className="flex flex-col gap-2">
                 {branches.map((b) => (
-                  <option key={b._id} value={b._id}>
+                  <label key={b._id} className="flex items-center gap-2 text-barber-white text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.branches.includes(b._id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setForm({ ...form, branches: [...form.branches, b._id] });
+                        } else {
+                          setForm({ ...form, branches: form.branches.filter(id => id !== b._id) });
+                        }
+                      }}
+                      className="rounded border-barber-dark"
+                    />
                     {b.name}
-                  </option>
+                  </label>
                 ))}
-              </select>
+              </div>
             </div>
           </div>
           <label className="flex items-center gap-2 text-barber-gray text-sm cursor-pointer">

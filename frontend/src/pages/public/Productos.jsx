@@ -48,7 +48,7 @@ export default function Productos() {
   // Filtrar
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchBranch = !selectedBranch || p.branch?._id === selectedBranch;
+    const matchBranch = !selectedBranch || p.branches?.some(b => (b._id || b) === selectedBranch);
     const matchCategory = !selectedCategory || p.category === selectedCategory;
     return matchSearch && matchBranch && matchCategory;
   });
