@@ -210,7 +210,7 @@ const seed = async () => {
         email: 'demo@demo.com',
         password: 'Demo1234',
         phone: '667 123 4567',
-        role: 'client',
+        role: 'owner',
       },
     ];
 
